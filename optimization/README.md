@@ -18,9 +18,11 @@ subject to:
 $$
 g_{1}(x_{1}, x_{2}, ..., x_{n}) = b_{1}\\
 $$
-$$
+
+```math
 \vdots
-$$
+```
+
 $$
 g_{n}(x_{1}, x_{2}, ..., x_{n}) = b_{n}\\
 $$
@@ -28,7 +30,7 @@ $$
 The Langrangian function would be:
 
 ```math
-L(\textbf{x}, \textbf{\lambda}) = f(\textbf{x}) + \sum_{j=1}^{m} \lambda_{j}g_{j}(x) - b_{j}
+L(x, \lambda) = f(\textbf{x}) + \sum_{j=1}^{m} \lambda_{j}g_{j}(x) - b_{j}
 ```
 
 We then minimize the Lagrangian:
