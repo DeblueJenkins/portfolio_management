@@ -16,9 +16,9 @@ $$
 subject to:
 
 $$
-g_{1}(x_{1}, x_{2}, ..., x_{n}) &= b_{1}\\
+g_{1}(x_{1}, x_{2}, ..., x_{n}) = b_{1}\\
 \vdots\\
-g_{n}(x_{1}, x_{2}, ..., x_{n}) &= b_{n}\\
+g_{n}(x_{1}, x_{2}, ..., x_{n}) = b_{n}\\
 $$
 
 The Langrangian function would be:
