@@ -9,12 +9,17 @@
 This problem is a linear optimization problem with equality constraints. We have:
 
 
-```math
+$$
 \min_{x_{1}, x_{2}, ... x_{n}} f(x_{1}, x_{2}, ..., x_{n})\\
+$$
+
+subject to:
+
+$$
 g_{1}(x_{1}, x_{2}, ..., x_{n}) &= b_{1}\\
-&\vdots\\
+\vdots\\
 g_{n}(x_{1}, x_{2}, ..., x_{n}) &= b_{n}\\
-```
+$$
 
 The Langrangian function would be:
 
