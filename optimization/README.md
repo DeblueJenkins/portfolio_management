@@ -4,10 +4,7 @@
 
 ### Analytical Solutions
 
-### Classical mean-variance problem with a target rate of return
-
 This problem is a linear optimization problem with equality constraints. We have:
-
 
 $$
 \min_{x_{1}, x_{2}, ... x_{n}} f(x_{1}, x_{2}, ..., x_{n})\\
@@ -39,6 +36,8 @@ We then minimize the Lagrangian:
 \min_{x, \lambda} L(x, \lambda)
 ```
 
+### Classical mean-variance problem with a target rate of return
+
 In the classical mean-variance problem with a target rate of return, the optimization function is the variance subject to constraints on the targeted rate of returns and the sum of weights.
 
 ```math
@@ -54,6 +53,19 @@ $$
 $$
 w^{T} 1 = 1
 $$
+
+This problem is an optimization with equality constraints. We can solve it using the method of Lagrange. We form the Lagrange function with two Lagrange multipliers $\lambda$ and $\gamma$:
+
+$$
+L(w, \lambda, \gamma) = \frac{1}{2}w^{T}\Sigma w + \lambda(m - w^{T}\mu) + \gamma(1 - w^{T}*1)
+$$
+
+$$
+\frac{\partial L}{\partial w}(w, \lambda, \gamma) = \Sigma w - \lambda\mu -\gamma 1 = 0
+\hat{w} = \Sigma^{-1}(\lambda\mu + \gamma * 1)
+$$
+
+
 
 
 
