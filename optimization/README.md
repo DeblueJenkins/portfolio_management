@@ -63,6 +63,7 @@ $$
 $$
 \frac{\partial L}{\partial w}(w, \lambda, \gamma) = \Sigma w - \lambda\mu -\gamma 1 = 0
 $$
+
 $$
 \hat{w} = \Sigma^{-1}(\lambda\mu + \gamma * 1)
 $$
