@@ -36,5 +36,24 @@ L(x, \lambda) = f(\textbf{x}) + \sum_{j=1}^{m} \lambda_{j}g_{j}(x) - b_{j}
 We then minimize the Lagrangian:
 
 ```math
-\min_{\textbf{x}, \textbf{\lambda}} L(\textbf{x}, \textbf{\lambda})
+\min_{x, \lambda} L(x, \lambda)
 ```
+
+In the classical mean-variance problem with a target rate of return, the optimization function is the variance subject to constraints on the targeted rate of returns and the sum of weights.
+
+```math
+\min_{w} \frac{1}{2}w^{T}\Sigma w
+```
+
+subject to:
+
+$$
+w^{T}\mu = m
+$$
+
+$$
+w^{T} 1 = 1
+$$
+
+
+
