@@ -4,6 +4,21 @@ from scipy.optimize import minimize
 
 
 
+def get_A(sigma_inverse):
+    return sigma_inverse.sum().sum()
+
+def get_B(sigma_inverse, mu):
+    return sigma_inverse.sum(axis=1) @ mu
+
+def get_C(sigma_inverse, mu):
+    return mu.T @ sigma_inverse @ mu
+
+def get_tangency_w(sigma, mu, r):
+    sigma_inverted = np.linalg.inv(sigma)
+    A = get_A(sigma_inverted)
+    B = get_B(sigma_inverted, mu)
+    w = (sigma_inverted @ (mu - r)) / (B - A*r)
+    return w
 
 def get_mean_variance_weights_analytically(mu, sigma, m):
 
@@ -79,7 +94,7 @@ def mean_variance_target(mu: np.ndarray, sigma: np.ndarray, m: np.float, method:
         return f, cons
 
 
-def sharpe_ratio(mu: np.array, sigma: np.array, rf: np.array):
+def sharpe_ratio(w: np.array, mu: np.array, sigma: np.ndarray, rf: np.array, minimize=True):
     """
 
     :param mu: np.array, expected value returns
@@ -87,8 +102,10 @@ def sharpe_ratio(mu: np.array, sigma: np.array, rf: np.array):
     :param rf: np.array, risk-free rate
     :return: np.array, sharpe ratio
     """
-
-    return (mu - rf) / sigma
+    if minimize:
+        return -1 * (w @ mu - rf) ** 2 / (w.T @ sigma @ w)
+    else:
+        return (w @ mu - rf) / np.sqrt((w.T @ sigma @ w))
 
 def trenor_ratio(mu: np.array, beta: np.array, rf: np.array):
     """

@@ -16,7 +16,7 @@ n_assets = len(names)
 config = {
     'start_date' : pd.Timestamp('2022-09-27'),
     'end_date' : pd.Timestamp('2023-02-17'),
-    'data': 'download'
+    'data': 'load'
 }
 
 # data = YahooStockData(**config)
@@ -64,16 +64,18 @@ for name in names:
 
 model = Historical(joined_data.dropna().values)
 
-opt = Optimizer(method = 'classical M-V')
+opt = Optimizer(mu = model.mu,
+                sigma = model.cov,
+                r = 0.01)
 
 
-weights = opt.get_portfolio_weights(mu = model.mu,
-                                    sigma = model.cov,
-                                    r = 0.01,
-                                    method = 'analytic')
+weights = opt.get_portfolio_weights(method = 'analytical')
 
-print('Optimal weights:')
+print('Optimal weights (analytical):')
 print({k:v for k,v in zip(names, weights)})
 
+weights = opt.get_portfolio_weights(method = 'nummerical')
 
+print('Optimal weights (nummerical):')
+print({k:v for k,v in zip(names, weights)})
 
