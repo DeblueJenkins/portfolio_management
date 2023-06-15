@@ -208,19 +208,17 @@ class AlphaVantage:
 
 
 
+
 class YahooData:
 
     def __init__(self, name: str, symbol: str = None):
         super().__init__()
 
-        if symbol is None:
-            map
-        self._load_data()
-
         self.name = name
         if symbol is None:
             self.symbol = MAPPER[self.name['YH']]
 
+        self._load_data()
 
     @abstractmethod
     def _load_data(self):
