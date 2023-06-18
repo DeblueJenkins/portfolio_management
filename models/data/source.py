@@ -4,6 +4,10 @@ import yfinance as yf
 import warnings
 import requests
 from .mapper import MAPPER
+import time
+import eikon as ek
+import datetime as dt
+import os
 
 warnings.filterwarnings("ignore")
 
@@ -15,6 +19,85 @@ class APIError(Exception):
 
     def __str__(self):
         return "APIError: status={}".format(self.msg)
+
+class Eikon:
+
+    def __init__(self, path_api_key: str = r'C:\Users\serge\OneDrive\Documents\apikeys.csv'):
+
+        ek_api_key = pd.read_csv(path_api_key, names=['api', 'key'], index_col=0)
+        ek.set_app_key(ek_api_key.loc['reuters'].values[0])
+
+        self.api = ek
+
+    def download_timeseries(self, rics: list, field: list = ['TR.PriceClose', 'Price Close'],
+                            date_field: list = ['TR.PriceClose.calcdate', 'Calc Date'], params: dict = None,
+                            save_config: dict = {'save': True, 'path': r'C:\Users\serge\IdeaProjects\portfolio_manager\portfolio_management\models\data\csv' }):
+        if not isinstance(rics, list):
+            raise AttributeError('rics parameter must be list, if it is single RIC, convert to list first')
+        data_dict = {}
+        for ric in rics:
+            try:
+                print(ric)
+                data_dict[ric] = ek.get_data(ric, [field[0], date_field[0]] , parameters=params)[0]
+                data_dict[ric].loc[:, date_field[0]] = data_dict[ric].loc[:, date_field[1]].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d'))
+                data_dict[ric].loc[:, 'Month'] = data_dict[ric].loc[:, date_field[0]].apply(lambda x: x.month)
+                data_dict[ric].loc[:, 'Year'] = data_dict[ric].loc[:, date_field[0]].apply(lambda x: x.year)
+
+                if save_config['save']:
+                    data_dict[ric].to_csv(f"{save_config['path']}\{ric}.csv")
+                    print(f"Saved: {save_config['path']}\{ric}.csv")
+            except Exception as e:
+                print('Exception occurred')
+                print(e)
+
+            #         self.data = pd.DataFrame.from_dict(data_dict, orient='index')
+        self.data_dict = data_dict
+        self._merge_individual_timeseries(field, date_field)
+
+
+    def load_timeseries(self, rics: list, load_path: str, field: list = ['TR.PriceClose', 'Price Close'],
+                        date_field: list = ['TR.PriceClose.calcdate', 'Calc Date']):
+        data_dict = {}
+        for ric in rics:
+            try:
+                data_dict[ric] = pd.read_csv(fr'{load_path}\{ric}.csv')
+                print(f'Loaded: {ric}')
+            except Exception as e:
+                print(e)
+        self.data_dict = data_dict
+        self._merge_individual_timeseries(field, date_field)
+    def _merge_individual_timeseries(self, field: str = ['TR.PriceClose', 'Price Close'],
+                                     date_field: str = ['TR.PriceClose.calcdata', 'Calc Date']):
+        if hasattr(self, 'data_dict'):
+            for i, (ric, df) in enumerate(self.data_dict.items()):
+                if i == 0:
+                    df_all = df.rename(columns={field[1]: ric})
+                    df_all = df_all[[date_field[1], ric]]
+                else:
+                    df = df.rename(columns={field[1]: ric})
+                    df = df[[ric, date_field[1]]]
+                    df_all = pd.merge(df_all, df, on=date_field[1])
+            self.data = df_all
+        else:
+            raise UserWarning('User must firstly either download or load the timeseries of choice')
+
+    def get_index_constituents(self, index: str = '.GDAXI', date: str = '20230321'):
+
+        all_rics = []
+        t0 = time.time()
+        index = list(index)
+        for i in range(len(index)):
+            try:
+                temp_rics, err = self.api.get_data(index[i], ['TR.IndexConstituentRIC' , 'TR.IndexConstituentName'], {'SDate': date})
+                # all_rics, err = ek.get_data(indices_rics[2], ['TR.IndexConstituentRIC' , 'TR.IndexConstituentName'])
+                print(f'Retrieved {time.time() - t0}')
+            except Exception as e:
+                print(err)
+            if err is None:
+                all_rics.append(temp_rics['Constituent RIC'].to_list())
+
+        return all_rics
+
 
 
 # this should have AlphaVantageStock as a subclass, but CCL right now
