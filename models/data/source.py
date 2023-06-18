@@ -126,7 +126,7 @@ class Eikon:
 
 
     def load_timeseries(self, rics: list, load_path: str, field: list = ['TR.PriceClose', 'Price Close'],
-                        date_field: list = ['TR.PriceClose.calcdate', 'Calc Date']):
+                        date_field: list = ['TR.PriceClose.calcdate', 'Calc Date'], out: bool = True):
         data_dict = {}
         for ric in rics:
             try:
@@ -136,6 +136,8 @@ class Eikon:
                 print(e)
         self.data_dict = data_dict
         self._merge_individual_timeseries(field, date_field)
+        if out:
+            return self.data.copy()
     def _merge_individual_timeseries(self, field: str = ['TR.PriceClose', 'Price Close'],
                                      date_field: str = ['TR.PriceClose.calcdata', 'Calc Date']):
         if hasattr(self, 'data_dict'):
