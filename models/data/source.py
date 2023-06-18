@@ -8,6 +8,7 @@ import time
 import eikon as ek
 import datetime as dt
 import os
+import numpy as np
 
 warnings.filterwarnings("ignore")
 
@@ -19,6 +20,71 @@ class APIError(Exception):
 
     def __str__(self):
         return "APIError: status={}".format(self.msg)
+
+
+class FamaFrenchData:
+
+    USE_COLS_MAPPER = {
+        'Developed_5_Factors_Daily':
+            {'factors': ['Mkt-RF', 'SMB', 'HML', 'CMA', 'RF'],
+             'use_cols': ['B', 'C', 'D', 'E', 'F', 'G']},
+         'Developed_MOM_Factor_Daily':
+             {'factors': ['WML'],
+              'use_cols': ['B']}
+    }
+
+    def __init__(self, path_to_input_folder: str,
+                 filenames: list):
+        """
+
+        :param path_to_input_folder:
+        :param filenames: dictionary contains the names of the files as keys and the
+        Excell cells (A, B, C) to use as values of the dict
+        """
+
+        self.path = path_to_input_folder
+        self.filenames = filenames
+        # index must be date col
+        self._load_files()
+        self._transform_files()
+
+    def _load_files(self):
+        self.factor_names = []
+        self._data = {}
+        self._size = {}
+        for i, f in enumerate(self.filenames):
+            header_row = 2
+            index_row = 0
+            use_cols = FamaFrenchData.USE_COLS_MAPPER[f]['use_cols']
+            factor_names = FamaFrenchData.USE_COLS_MAPPER[f]['factors']
+            df_factors = pd.read_csv(filepath_or_buffer=fr'{self.path}\\{f}.csv',
+                                     header=header_row,
+                                     index_col=index_row,
+                                     parse_dates=True)
+            if len(factor_names) > 1:
+                for fac in factor_names:
+                    self._data[fac] = df_factors.loc[:, fac]
+                    self._data[fac] = self._data[fac].replace({-99.99:np.nan}) / 100
+                    self._size[fac] = len(self._data[fac])
+                    self.factor_names.append(fac)
+            else:
+                self._data[factor_names[0]] = df_factors.replace({-99.99:np.nan}) / 100
+                self.factor_names.append(factor_names[0])
+
+    def _transform_files(self):
+        if hasattr(self, '_data'):
+            max_size_key = max(self._size, key=self._size.get)
+            for i, fac in enumerate(self.factor_names):
+                if i == 0:
+                    df = self._data[max_size_key]
+                else:
+                    if fac != max_size_key:
+                        df = pd.merge(df, self._data[fac], how='left', left_index=True, right_index=True)
+            self.data = df
+        else:
+            raise UserWarning('Loading files has failed, self._data has not been set.')
+
+
 
 class Eikon:
 
@@ -32,6 +98,10 @@ class Eikon:
     def download_timeseries(self, rics: list, field: list = ['TR.PriceClose', 'Price Close'],
                             date_field: list = ['TR.PriceClose.calcdate', 'Calc Date'], params: dict = None,
                             save_config: dict = {'save': True, 'path': r'C:\Users\serge\IdeaProjects\portfolio_manager\portfolio_management\models\data\csv' }):
+
+        ## There should be a class attribute name mapper between TR.fields and their corresponding column names
+        ## s.t. data_field and field don't have to be lists
+
         if not isinstance(rics, list):
             raise AttributeError('rics parameter must be list, if it is single RIC, convert to list first')
         data_dict = {}

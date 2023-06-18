@@ -26,7 +26,7 @@ class DataHandler:
         T = len(self.data)
         self.returns = {}
         for t in np.arange(0, T-period, period):
-            self.returns[self.data.loc[t+period,self.date_col]] = np.log(self.data.iloc[t+period,self.asset_cols].values / self.data.iloc[t,self.asset_cols].values)
+            self.returns[self.data.loc[t+period,self.date_col]] = np.log(self.data.loc[t+period,self.asset_cols].values / self.data.loc[t,self.asset_cols].values)
         self.returns = pd.DataFrame.from_dict(self.returns, orient='index')
         self.returns.columns = self.data.columns[1:]
         if period == 12:
