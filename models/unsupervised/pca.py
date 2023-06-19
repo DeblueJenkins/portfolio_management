@@ -1,31 +1,52 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import warnings
+import pandas as pd
+
+def get_svd(x):
+    u, s, v = np.linalg.svd(x)
+    n = x.shape[0]
+    singular_values = s
+
+    stability_condition_1 = np.any(singular_values == 0)
+    stability_condition_2 = len(singular_values) != len(np.unique(singular_values))
+
+    if stability_condition_1 or stability_condition_2:
+        warnings.warn('Possible instability in the SVD')
+
+    eig_vecs = v.T
+    eig_vals = np.power(s, 2) / (n - 1)
+
+    return singular_values, eig_vals, eig_vecs
 
 class PcaHandler:
 
-    def __init__(self, data: np.array, demean: bool = True):
+    def __init__(self, data: pd.DataFrame, demean: bool = True):
         """
         Principle Component Object
-        :param data: numpy array containing the explanatory variables
+        :param data: pd.DataFrame,
+        then first column needs to be dates (str or datetime), rest needs to be prices (floats)
+        :param demean: boolean, whether to demean it or not; will work also with numpy array but dates
+        will be lost
         """
-        self.raw_data = data
-        if demean:
-            self.x = data - data.mean(axis=0)
+        if isinstance(data, pd.DataFrame):
+            self.index = data.iloc[:, 0].values
+            self.raw_data = data.iloc[:, 1:].astype(float).values
+        elif isinstance(data, np.ndarray):
+            self.index = np.arange(len(data))
+            self.raw_data = data
         else:
-            self.x = data
-        self.n = np.shape(self.x)[0]
-        u, s, v = np.linalg.svd(self.x)
-        self.singular_values = s
+            raise UserWarning('Data must be either np.array or pd.DataFrame')
 
-        stability_condition_1 = np.any(self.singular_values == 0)
-        stability_condition_2 = len(self.singular_values) != len(np.unique(self.singular_values))
+        if demean:
+            self.x = self.raw_data - self.raw_data.mean(axis=0)
+        else:
+            self.x = self.raw_data
+        self.n, self.m = self.x.shape
+        self._get_svd()
 
-        if stability_condition_1 or stability_condition_2:
-            warnings.warn('Possible instability in the SVD')
-
-        self.eig_vecs = v.T
-        self.eig_vals = np.power(s, 2) / (self.n - 1)
+    def _get_svd(self):
+        self.singular_values, self.eig_vals, self.eig_vecs = get_svd(self.x)
 
     def benchmark_test(self) -> None:
 
@@ -57,3 +78,13 @@ class PcaHandler:
         ax1.set_ylabel("explained variance")
         ax1.grid()
         ax1.set_title("Scree Plot")
+
+
+
+
+
+
+
+
+
+
