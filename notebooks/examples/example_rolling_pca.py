@@ -26,5 +26,8 @@ config = {
 eikon_api = Eikon(path_apikeys)
 data = eikon_api.load_timeseries(**params)
 
+data.set_index('Calc Date', inplace=True)
+
 rolling = RollingModel(rolling_window=200, data=data, demean=True)
 rolling.estimate(config=config, RIC=rics_list[2])
+rolling.plot_resids()

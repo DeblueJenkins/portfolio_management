@@ -2,6 +2,7 @@ from models.unsupervised.pca import PcaHandler
 import pandas as pd
 import numpy as np
 from models.stat_models.linearregression import LinearRegressionModel
+import matplotlib.pyplot as plt
 
 class RollingModel:
 
@@ -16,7 +17,7 @@ class RollingModel:
         """
 
         if isinstance(data, pd.DataFrame):
-            self.index = data.iloc[:, 0].values
+            self.index = data.index.values
             self.raw_data = data.iloc[:, 1:].astype(float).values
             self.assets = data.columns[1:]
         elif isinstance(data, np.array):
@@ -85,11 +86,23 @@ class RollingModel:
                 continue
 
         self._y = self.y[:self.n-self.rolling_window]
-        errors = np.array(errors)
-        ss_res = np.dot(errors.T, errors)
+        self.errors = np.array(errors)
+        ss_res = np.dot(self.errors.T, self.errors)
         ss_tot = np.dot((self._y - np.mean(self._y)).T, self._y - np.mean(self._y))
         self.r_sqr = float(1 - ss_res/ss_tot)
 
 
+    def plot_resids(self):
 
+        r2 = round(self.r_sqr, 5)
+        fig, ax1 = plt.subplots(1, 1, figsize=(8, 6))
+        ax1.plot(self.errors, label='resids', color="black", linewidth=2)
+        ax1.tick_params(labelrotation=45)
+        ax1.set_title("Scatter Plot Predictions $r^{2} = $" + str(r2))
+        ax1.set_xlabel("Time")
+        ax1.set_ylabel("Predictions")
+        ax1.grid()
+        ax1.legend()
+
+        fig.show()
 

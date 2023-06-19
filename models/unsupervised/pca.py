@@ -30,8 +30,8 @@ class PcaHandler:
         will be lost
         """
         if isinstance(data, pd.DataFrame):
-            self.index = data.iloc[:, 0].values
-            self.raw_data = data.iloc[:, 1:].astype(float).values
+            self.index = np.array(data.index)
+            self.raw_data = data.astype(float).values
         elif isinstance(data, np.ndarray):
             self.index = np.arange(len(data))
             self.raw_data = data
