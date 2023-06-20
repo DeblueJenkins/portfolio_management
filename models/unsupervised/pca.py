@@ -7,6 +7,7 @@ class PcaHandler:
     def __init__(self, data: np.array):
         """
         Principle Component Object
+
         :param data: numpy array containing the explanatory variables
         """
         self.raw_data = data
@@ -20,6 +21,7 @@ class PcaHandler:
     def benchmark_test(self) -> None:
         """
         Compares the PCA covariance to the emperical covariance
+
         :return:
         """
         np_cov = np.cov(self.x, rowvar=False)
@@ -29,6 +31,7 @@ class PcaHandler:
     def components(self, n: int) -> np.array:
         """
         Computes principle components
+
         :param n: number of factors
         :return: n pca vectors factor
         """
