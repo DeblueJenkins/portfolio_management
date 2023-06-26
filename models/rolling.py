@@ -64,10 +64,12 @@ class RollingModel:
         i = 0
         # good to know this upfront, no time now
         errors = []
+        all_errors = {}
         for i in range(self.n):
+            print(i)
             try:
-                x = self.x[i:i+self.rolling_window, :]
-                y = self.y[i:i+self.rolling_window]
+                x = self.x[:i+self.rolling_window, :]
+                y = self.y[:i+self.rolling_window]
                 date = self.index[i+self.rolling_window]
                 self.size_of_rolling_windows.append(len(x))
                 i += 1
@@ -82,6 +84,7 @@ class RollingModel:
                 if config['OLS']:
                     ols = LinearRegressionModel(X, y)
                     errors.append(ols.residuals[-1][0])
+                    all_errors[date] = ols.residuals.flatten()
             except IndexError:
                 continue
 
@@ -90,6 +93,7 @@ class RollingModel:
         ss_res = np.dot(self.errors.T, self.errors)
         ss_tot = np.dot((self._y - np.mean(self._y)).T, self._y - np.mean(self._y))
         self.r_sqr = float(1 - ss_res/ss_tot)
+        self.all_errors = pd.DataFrame.from_dict(all_errors, orient='index').T
 
 
     def plot_resids(self):
