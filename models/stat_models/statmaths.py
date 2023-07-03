@@ -1,6 +1,42 @@
 import numpy as np
 
 
+def covariance_matrix(data: np.array):
+    """
+    compute covariance matrix
+
+    :param data: numpy array of data
+    :return: covariance matrix
+    """
+    x = data - data.mean(axis=0)
+    return np.dot(x.T, x)/(len(x) - 1)
+
+
+def cholesky(c: np.array) -> np.array:
+    """
+    computes the cholesky decomposition: transpose(a) * a = c
+
+    :param c: a correlation matrix as numpy array
+    :return: the "square root" of a matrix
+    """
+    n = np.shape(c)[0]
+
+    a = np.zeros((n, n))
+
+    for i in range(0, n):
+        for k in range(0, i+1):
+            cross_sum_k = 0
+            for j in range(0, k):
+                cross_sum_k += np.sum(a[i][j] * a[k][j])
+
+            if i == k:
+                a[i][k] = np.sqrt(c[i][i] - cross_sum_k)
+            else:
+                a[i][k] = (c[i][k] - cross_sum_k)/a[k][k]
+
+    return a
+
+
 def _gh_stepsize(vP):
 
     vh = 1e-8*(np.fabs(vP)+1e-8)   # Find stepsize

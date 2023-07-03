@@ -28,6 +28,7 @@ class PcaHandler:
         then first column needs to be dates (str or datetime), rest needs to be prices (floats)
         :param demean: boolean, whether to demean it or not; will work also with numpy array but dates
         will be lost
+
         """
         if isinstance(data, pd.DataFrame):
             self.index = np.array(data.index)
@@ -52,6 +53,7 @@ class PcaHandler:
 
         """
         Compares the PCA covariance to the empirical covariance.
+
         """
 
         self.cov_data = np.cov(self.x, rowvar=False)
@@ -61,6 +63,7 @@ class PcaHandler:
     def components(self, n: int) -> np.array:
         """
         Computes principle components
+
         :param n: number of factors
         :return: n pca vectors factor
         """
