@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from models.stat_models.linearregression import LinearRegressionModel
 import matplotlib.pyplot as plt
+import multiprocessing as mp
 
 class RollingModel:
 
@@ -47,6 +48,11 @@ class RollingModel:
             }
         :param RIC: if int, it will estimate for the int-indexed asset, if str it will estimate for the RIC
         :return:
+
+        The algorithm can be described as follows:
+            1. Estimate PCA in the window and retrieve desired number of PCs
+            2. Estimate OLS but save only last residual (to avoid data leakage)
+            3. Move window by one period, and repeat
         """
 
         if isinstance(RIC, int):
@@ -63,8 +69,9 @@ class RollingModel:
         self.size_of_rolling_windows = []
         i = 0
         # good to know this upfront, no time now
-        errors = []
+        errors_insample = []
         all_errors = {}
+        all_factor_loadings = {}
         for i in range(self.n):
             print(i)
             try:
@@ -81,18 +88,30 @@ class RollingModel:
 
                     X = pca_model.components(config['n_components'])
 
+                # this should be outside, independent of this loop
                 if config['OLS']:
                     ols = LinearRegressionModel(X, y)
-                    errors.append(ols.residuals[-1][0])
+                    params = ols.beta.flatten()
+
+                    # in sample error
+                    errors_insample.append(ols.residuals[-1][0])
+
                     all_errors[date] = ols.residuals.flatten()
+                    all_factor_loadings[date] = params
+
             except IndexError:
                 continue
 
+        self.factor_loadings = pd.DataFrame.from_dict(all_factor_loadings, orient='index')
+        self.all_errors = pd.DataFrame.from_dict(all_errors, orient='index')
         self._y = self.y[:self.n-self.rolling_window]
-        self.errors = np.array(errors)
+        self.errors = np.array(errors_insample)
         ss_res = np.dot(self.errors.T, self.errors)
         ss_tot = np.dot((self._y - np.mean(self._y)).T, self._y - np.mean(self._y))
+        df_res = len(self.errors) - self.m
+        df_tot = len(self.errors) - 1
         self.r_sqr = float(1 - ss_res/ss_tot)
+        self.r_sqr_adj = float(1 - (ss_res/df_res)/(ss_tot/df_tot))
         self.all_errors = pd.DataFrame.from_dict(all_errors, orient='index').T
 
 

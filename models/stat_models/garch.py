@@ -4,7 +4,9 @@ from scipy.optimize import minimize
 from models.stat_models.statmaths import jacobian_2sided, covariance, make_covariance_robust
 from scipy.stats import norm
 import pandas as pd
-
+from numba import jit
+import warnings
+from scipy.optimize import minimize
 
 class Garch:
 
@@ -259,4 +261,119 @@ def generate_garch_data(n: int, w: float, a: float, b: float, s2: float):
         s2 = w + b * s2 + a * data[i] * data[i]
 
     return data, variances
+
+
+def get_ewma_mean(r: np.ndarray, l: float, tau: int):
+
+    assert len(r) == tau
+    decay = l ** np.arange(0, tau)
+    mean = np.dot(decay, r) / np.sum(decay)
+    return mean
+def get_ewma_variance(r: np.ndarray, l: float, tau: int):
+
+    assert len(r) == tau
+    # this can be improved by using intra-day returns to proxy variance instead of r^2
+    decay = l ** np.arange(0, tau)
+    sqr_demean_ret = (r - get_ewma_mean(r, l, tau)) ** 2
+    var = np.dot(decay, sqr_demean_ret) / np.sum(decay)
+    return var
+class EWMA:
+
+    def __init__(self, data: np.ndarray, tau: int):
+        """
+
+        :param data: np.array, first entry has to be the most recent observation
+        :param tau: int, rolling window for EWM
+        """
+        if isinstance(data, np.ndarray):
+            self.data = data.astype(float)
+            self.dates = None
+        elif isinstance(data, pd.Series):
+            self.data = data.values.astype(float)
+            self.dates = data.index.values
+        warnings.warn('Data must be sorted s.t. first entry is the most recent observation')
+        self.tau = tau
+        self.T = len(data)
+
+    def fit(self, out=False):
+        res = self._fit(self.data, self.tau)
+        self.l = res.x[0]
+        if out:
+            return res
+
+    def get_conditional_moments(self, l: float = None, out=True):
+        if l is None:
+            l = self.l
+        elif not isinstance(l, float):
+            raise UserWarning('lambda must be provided as a float')
+
+        self.conditional_variance = np.zeros(self.T-self.tau-1)
+        self.conditional_mean = np.zeros(self.T-self.tau-1)
+        for t in np.arange(0, self.T-self.tau-1):
+            # careful, there is a difference in t here, r_{t} - mean_{t-1} / std_{t-1}
+            mean = get_ewma_mean(self.data[t+1:t+self.tau+1], l, self.tau)
+            var = get_ewma_variance(self.data[t+1:t+self.tau+1], l, self.tau)
+            self.conditional_variance[t] = var
+            self.conditional_mean[t] = mean
+
+        if self.dates is not None:
+
+            self.conditional_mean = pd.Series(data=self.conditional_mean, index=self.dates[:self.T-self.tau-1], name='ewm_mean')
+            self.conditional_variance = pd.Series(data=self.conditional_variance, index=self.dates[:self.T-self.tau-1], name='ewm_var')
+
+        if out:
+            return self.conditional_mean, self.conditional_variance
+
+    @staticmethod
+    # @jit(nopython=True)
+    def _fit(data, tau):
+        def objective(l, data, tau):
+            T = len(data)
+            rmse = np.zeros(T-tau-1)
+            for t in np.arange(0, T-tau-1):
+
+                mean = get_ewma_mean(data[t+1:t+tau+1], l, tau)
+                var = get_ewma_variance(data[t+1:t+tau+1], l, tau)
+                r = data[t]
+                _rmse = ((r - mean) ** 2 - var) ** 2
+                rmse[t] = _rmse
+
+
+            rmse = np.sum(rmse) / (T-tau)
+            return rmse
+
+        func = lambda x: objective(x, data, tau)
+        res = minimize(fun=func, x0=0.8)
+        return res
+
+class MultivariateEWMA:
+
+    def __init__(self, data: np.ndarray, tau: int):
+
+
+        if isinstance(data, pd.DataFrame):
+            self.asset_names = data.columns
+            self.is_df = True
+        elif isinstance(data, np.ndarray):
+            self.asset_names = np.arange(data.shape[1])
+            self.is_df = False
+        self.n_assets = len(self.asset_names)
+        self.tau = tau
+
+        marginal_models = {}
+        marginal_decay_parameters = {}
+        for a in range(self.n_assets):
+            if self.is_df:
+                model = EWMA(data.iloc[:, a], tau)
+            else:
+                model = EWMA(data[:, a], tau)
+            model.fit()
+            marginal_models[self.asset_names[a]] = model
+            marginal_decay_parameters[self.asset_names[a]] = model.l
+
+
+
+
+
+
 

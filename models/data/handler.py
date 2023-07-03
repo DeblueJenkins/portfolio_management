@@ -15,11 +15,13 @@ class DataHandler:
         """
 
         self.data = data
-        self.asset_cols = [_ for _ in data.columns if _ != date_col]
+        self.data.set_index(date_col, inplace=True)
+        # self.asset_cols = [_ for _ in data.columns if _ != date_col]
         # to do: to be datetime
         # self.data[date_col] = self.data[date_col].apply(lambda x: )
         # also; converison to float is not working here
-        self.data[self.asset_cols] = self.data[self.asset_cols].astype({_:'float' for _ in self.asset_cols })
+        # self.data[self.asset_cols] = self.data[self.asset_cols].astype({_:'float' for _ in self.asset_cols })
+        self.data = self.data.astype(float)
         self.date_col = date_col
 
     def get_returns(self, period: int, out: bool = True):
@@ -29,14 +31,17 @@ class DataHandler:
         self.returns = {}
         for t in np.arange(0, T-period, period):
 
-            self.returns[self.data.loc[t+period,self.date_col]] = np.log(self.data.loc[t+period,self.asset_cols].astype(float).values / self.data.loc[t,self.asset_cols].astype(float).values)
+            self.returns[self.data.index[t+period]] = np.log(self.data.iloc[t+period,:].astype(float).values / self.data.iloc[t,:].astype(float).values)
         self.returns = pd.DataFrame.from_dict(self.returns, orient='index')
-        self.returns.columns = self.data.columns[1:]
-        if period == 12:
-            assert np.isclose(self.returns.iloc[0,0],np.log(79.848712 / 72.458651))
+        self.returns.columns = self.data.columns
 
         if out:
             return self.returns.copy()
 
+    def get_overlapping_returns(self, period: int, out: bool = True):
+        self.returns = np.log(self.data / self.data.shift(period))
+        self.returns.dropna(axis=0, how='all', inplace=True)
+        if out:
+            return self.returns.copy()
 
 

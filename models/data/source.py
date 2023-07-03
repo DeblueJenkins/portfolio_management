@@ -97,7 +97,8 @@ class Eikon:
 
     def download_timeseries(self, rics: list, field: list = ['TR.PriceClose', 'Price Close'],
                             date_field: list = ['TR.PriceClose.calcdate', 'Calc Date'], params: dict = None,
-                            save_config: dict = {'save': True, 'path': r'C:\Users\serge\IdeaProjects\portfolio_manager\portfolio_management\models\data\csv' }):
+                            save_config: dict = {'save': True, 'path': r'C:\Users\serge\IdeaProjects\portfolio_manager\portfolio_management\models\data\csv' },
+                            out: bool = True):
 
         ## There should be a class attribute name mapper between TR.fields and their corresponding column names
         ## s.t. data_field and field don't have to be lists
@@ -108,7 +109,7 @@ class Eikon:
         for ric in rics:
             try:
                 print(ric)
-                data_dict[ric] = ek.get_data(ric, [field[0], date_field[0]] , parameters=params)[0]
+                data_dict[ric] = ek.get_data(ric, [field[0], date_field[0]], parameters=params)[0]
                 data_dict[ric].loc[:, date_field[0]] = data_dict[ric].loc[:, date_field[1]].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d'))
                 data_dict[ric].loc[:, 'Month'] = data_dict[ric].loc[:, date_field[0]].apply(lambda x: x.month)
                 data_dict[ric].loc[:, 'Year'] = data_dict[ric].loc[:, date_field[0]].apply(lambda x: x.year)
@@ -140,35 +141,68 @@ class Eikon:
             return self.data.copy()
     def _merge_individual_timeseries(self, field: str = ['TR.PriceClose', 'Price Close'],
                                      date_field: str = ['TR.PriceClose.calcdata', 'Calc Date']):
-        if hasattr(self, 'data_dict'):
-            for i, (ric, df) in enumerate(self.data_dict.items()):
-                if i == 0:
-                    df_all = df.rename(columns={field[1]: ric})
-                    df_all = df_all[[date_field[1], ric]]
-                else:
-                    df = df.rename(columns={field[1]: ric})
-                    df = df[[ric, date_field[1]]]
-                    df_all = pd.merge(df_all, df, on=date_field[1])
-            self.data = df_all
-        else:
-            raise UserWarning('User must firstly either download or load the timeseries of choice')
+            if hasattr(self, 'data_dict'):
 
-    def get_index_constituents(self, index: str = '.GDAXI', date: str = '20230321'):
+                    for i, (ric, df) in enumerate(self.data_dict.items()):
+                        try:
+                            if i == 0:
+                                df_all = df.rename(columns={field[1]: ric})
+                                df_all = df_all[[date_field[1], ric]]
+                            else:
+                                df = df.rename(columns={field[1]: ric})
+                                df = df[[ric, date_field[1]]]
+                                df_all = pd.merge(df_all, df, on=date_field[1])
+                        except Exception as e:
+                            print(f'Exception for {ric}: {repr(e)}')
+
+                        self.data = df_all
+
+            else:
+                raise UserWarning('User must firstly either download or load the timeseries of choice')
+
+    def get_index_constituents(self, index: str = '.SPX', date: str = '20230321'):
 
         all_rics = []
         t0 = time.time()
-        index = list(index)
+        if isinstance(index, str):
+            ind = []
+            ind.append(index)
+            index = ind
+        elif not isinstance(index, list) or not isinstance(index, str):
+            raise UserWarning('index must be string or list of str')
+
         for i in range(len(index)):
             try:
                 temp_rics, err = self.api.get_data(index[i], ['TR.IndexConstituentRIC' , 'TR.IndexConstituentName'], {'SDate': date})
                 # all_rics, err = ek.get_data(indices_rics[2], ['TR.IndexConstituentRIC' , 'TR.IndexConstituentName'])
                 print(f'Retrieved {time.time() - t0}')
+
             except Exception as e:
                 print(err)
+                print(e)
             if err is None:
                 all_rics.append(temp_rics['Constituent RIC'].to_list())
 
-        return all_rics
+        return all_rics[0]
+
+
+class EikonIndustryRegionClassifier(Eikon):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+
+
+    def get_classifications(self, rics: list, ):
+
+        results_sectors = {}
+        results_market_cap = {}
+        #  'TR.CompanyMarketCap'
+        for ric in rics:
+            self.api.get_data(ric, fields=['TR.GICSSector'])
+
+
+
+
 
 
 
