@@ -5,11 +5,12 @@ import pickle
 from models.data.handler import DataHandler
 import matplotlib.pyplot as plt
 import datetime as dt
+import os
 import pandas as pd
 
-data_path = r'C:\Users\serge\IdeaProjects\portfolio_manager\portfolio_management\models\data'
-path_apikeys = r'C:\Users\serge\OneDrive\Documents\apikeys.csv'
 
+data_path = r'C:\Users\HP\Documents\GitHub\portfolio_management\models\data'
+path_apikeys = r'C:\Users\HP\IdeaProjects\FinIgor\data\apikeys.csv'
 eikon_api = Eikon(path_apikeys)
 
 index = '.SPX'
@@ -40,7 +41,7 @@ params_download = {
     'field': ['TR.PriceClose', 'Price Close'],
     'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
     'save_config': {
-        'path': r'C:\Users\serge\IdeaProjects\portfolio_manager\portfolio_management\models\data\csv',
+        'path': os.path.join(data_path, 'csv'),
         'save': True
     },
     'params': {
@@ -54,7 +55,7 @@ params_load = {
     'rics': rics_list,
     'field': ['TR.PriceClose', 'Price Close'],
     'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
-    'load_path': r'C:\Users\serge\IdeaProjects\portfolio_manager\portfolio_management\models\data\csv'
+    'load_path': os.path.join(data_path, 'csv')
 
 }
 

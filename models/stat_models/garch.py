@@ -8,6 +8,7 @@ from numba import jit
 import warnings
 from scipy.optimize import minimize
 
+
 class Garch:
 
     def __init__(self, conf: float = 0.05):
@@ -269,6 +270,7 @@ def get_ewma_mean(r: np.ndarray, l: float, tau: int):
     decay = l ** np.arange(0, tau)
     mean = np.dot(decay, r) / np.sum(decay)
     return mean
+
 def get_ewma_variance(r: np.ndarray, l: float, tau: int):
 
     assert len(r) == tau
@@ -277,6 +279,8 @@ def get_ewma_variance(r: np.ndarray, l: float, tau: int):
     sqr_demean_ret = (r - get_ewma_mean(r, l, tau)) ** 2
     var = np.dot(decay, sqr_demean_ret) / np.sum(decay)
     return var
+
+
 class EWMA:
 
     def __init__(self, data: np.ndarray, tau: int):
