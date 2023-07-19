@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def covariance_matrix(data: np.array):
+def covariance_matrix(data: np.array) -> np.array:
     """
     compute covariance matrix
 
@@ -10,6 +10,17 @@ def covariance_matrix(data: np.array):
     """
     x = data - data.mean(axis=0)
     return np.dot(x.T, x)/(len(x) - 1)
+
+
+def mean(data: np.array) -> np.array:
+    """
+    compute the multivariate mean
+
+    :param data: numpy array of data
+    :return: mean vector
+    """
+    n_assets = np.shape(data)[1]
+    return np.mean(data, axis=0).reshape(n_assets, 1)
 
 
 def cholesky(c: np.array) -> np.array:

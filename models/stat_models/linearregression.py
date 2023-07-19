@@ -27,6 +27,7 @@ class LinearRegressionModel:
         x = np.insert(x, 0, 1, axis=1)
         self.x = x
         self.y = y
+        self.p = x.shape[1] - 1
         self.n = len(self.y)
         self.conf = conf
         self.reg_param = reg_param
@@ -40,6 +41,8 @@ class LinearRegressionModel:
         self.residuals = np.dot(self.x, self.beta) - self.y
         self.sigma = np.sqrt(np.dot(self.residuals.T, self.residuals)/(len(y) - len(self.beta) + 1))
         self.mse = self.compute_mse(self.beta)
+        self.df_res = self.n - self.p
+        self.df_total = self.n - 1
 
     def ols(self) -> np.array:
         """
@@ -115,6 +118,12 @@ class LinearRegressionModel:
         ss_res = np.dot(self.residuals.T, self.residuals)
         ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
         return float(1 - ss_res/ss_tot)
+
+    def r_square_adj(self) -> float:
+
+        ss_res = np.dot(self.residuals.T, self.residuals)
+        ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
+        return float(1 - (ss_res/self.df_res) / (ss_tot/self.df_total))
 
     def plot(self) -> None:
         """
