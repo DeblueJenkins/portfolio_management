@@ -44,7 +44,6 @@ class LinearRegressionModel:
         self.df_res = self.n - self.p
         self.df_total = self.n - 1
 
-
     def ols(self) -> np.array:
         """
         computes the standard ols estimator
@@ -125,8 +124,6 @@ class LinearRegressionModel:
         ss_res = np.dot(self.residuals.T, self.residuals)
         ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
         return float(1 - (ss_res/self.df_res) / (ss_tot/self.df_total))
-
-
 
     def plot(self) -> None:
         """

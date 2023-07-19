@@ -1,10 +1,11 @@
-from models.rolling import RollingModel
+
+from models.unsupervised.pca import R2Pca
 from models.data.source import Eikon
-import numpy as np
 from models.data.handler import DataHandler
 import pickle
 import os
-
+from models.stat_models.linearregression import MultiOutputLinearRegressionModel
+import numpy as np
 
 data_path = r'C:\Users\HP\Documents\GitHub\portfolio_management\models\data'
 path_apikeys = r'C:\Users\HP\IdeaProjects\FinIgor\data\apikeys.csv'
@@ -53,7 +54,14 @@ preprocessor = DataHandler(data=data, date_col=params['date_field'][1])
 
 X = preprocessor.get_returns(period=15)
 X.dropna(axis=1, inplace=True)
+np.array(X)
 
-rolling = RollingModel(rolling_window=200, data=X, demean=True)
+rolling = R2Pca(data=X, rolling_window=150)
+a = rolling.components(n=3)
 
-rolling.estimate(config=config, RIC="BA.N")
+
+line_model = MultiOutputLinearRegressionModel(x=rolling.components, y=rolling.raw_data[(150-1):, :],
+                                              tickers=list(rolling.assets))
+
+line_model.plot_ticker(list(rolling.assets)[20])
+

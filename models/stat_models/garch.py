@@ -8,7 +8,26 @@ from numba import jit
 import warnings
 from scipy.optimize import minimize
 
+
 class Garch:
+
+    @staticmethod
+    def parameter_transform(theta, vector: bool = True):
+        """
+        applies parameter transforms to ensure that the parameters stay in their respective ranges
+        :param theta: parameter vector (w, a, b)
+        :param vector:
+        :return:
+        """
+        r = (
+            (np.exp(theta[0])),
+            (np.exp(theta[1])),
+            (1/(1+np.exp(-theta[2])))
+        )
+        if vector:
+            return np.append([], r)
+        else:
+            return r
 
     def __init__(self, conf: float = 0.05):
         """
@@ -62,7 +81,7 @@ class Garch:
         :param theta: parameter vector (w, a, b)
         :return: array of likelihood contributions
         """
-        w, a, b = parameter_transform(theta)
+        w, a, b = self.parameter_transform(theta)
 
         data_variances, likelihood_values = self.garch(w=w, a=a, b=b, sigma2=self.init_sigma2)
 
@@ -90,12 +109,12 @@ class Garch:
         self.n = self.data.shape[0]
 
         self.set_initial_guesses(init_value_sigma2=init_value_sigma2, init_value_theta=init_value_theta)
-        self.tx0 = parameter_transform(self.x0)
+        self.tx0 = self.parameter_transform(self.x0)
 
         self.sol = minimize(self.objective_function, self.x0, method='BFGS', options={'disp': True, 'maxiter': 250})
 
         self.x = self.sol['x']
-        self.tx = parameter_transform(self.x)
+        self.tx = self.parameter_transform(self.x)
         self.variances, self.likelihood_values = self.garch(w=self.tx[0], a=self.tx[1],
                                                             b=self.tx[2], sigma2=self.init_sigma2)
 
@@ -190,7 +209,7 @@ class Garch:
         """
         if self.fitted:
             cov_non_robust = covariance(theta=self.x, average_likelihood_func=self.objective_function, n=self.n)
-            jac = jacobian_2sided(parameter_transform, self.x, True)
+            jac = jacobian_2sided(self.parameter_transform, self.x, True)
 
             if not robust:
                 cov = np.linalg.multi_dot([jac, cov_non_robust, jac.T])
@@ -231,24 +250,6 @@ class Garch:
             return pd.DataFrame({})
 
 
-def parameter_transform(theta, vector: bool = True):
-    """
-    applies parameter transforms to ensure that the parameters stay in their respective ranges
-    :param theta: parameter vector (w, a, b)
-    :param vector:
-    :return:
-    """
-    r = (
-        (np.exp(theta[0])),
-        (np.exp(theta[1])),
-        (1/(1+np.exp(-theta[2])))
-    )
-    if vector:
-        return np.append([], r)
-    else:
-        return r
-
-
 def generate_garch_data(n: int, w: float, a: float, b: float, s2: float):
 
     variances = np.zeros(n)
@@ -269,6 +270,7 @@ def get_ewma_mean(r: np.ndarray, l: float, tau: int):
     decay = l ** np.arange(0, tau)
     mean = np.dot(decay, r) / np.sum(decay)
     return mean
+
 def get_ewma_variance(r: np.ndarray, l: float, tau: int):
 
     assert len(r) == tau
@@ -277,6 +279,8 @@ def get_ewma_variance(r: np.ndarray, l: float, tau: int):
     sqr_demean_ret = (r - get_ewma_mean(r, l, tau)) ** 2
     var = np.dot(decay, sqr_demean_ret) / np.sum(decay)
     return var
+
+
 class EWMA:
 
     def __init__(self, data: np.ndarray, tau: int):

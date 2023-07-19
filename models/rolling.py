@@ -1,9 +1,10 @@
-from models.unsupervised.pca import PcaHandler
+from models.unsupervised.pca import PcaHandler, get_svd
 import pandas as pd
 import numpy as np
 from models.stat_models.linearregression import LinearRegressionModel
 import matplotlib.pyplot as plt
 import multiprocessing as mp
+
 
 class RollingModel:
 
@@ -32,7 +33,15 @@ class RollingModel:
             self.x = self.raw_data - self.raw_data.mean(axis=0)
         else:
             self.x = self.raw_data
+
         self.n, self.m = self.x.shape
+
+        self.y = None
+        self.singular_values = {}
+        self.eig_vals = {}
+        self.eig_vecs = {}
+
+        self.size_of_rolling_windows = []
 
         self.rolling_window = rolling_window
 
@@ -113,7 +122,6 @@ class RollingModel:
         self.r_sqr = float(1 - ss_res/ss_tot)
         self.r_sqr_adj = float(1 - (ss_res/df_res)/(ss_tot/df_tot))
         self.all_errors = pd.DataFrame.from_dict(all_errors, orient='index').T
-
 
     def plot_resids(self):
 
