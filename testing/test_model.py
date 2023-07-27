@@ -82,18 +82,18 @@ def test_markowitz_portfolio():
     assert pytest.approx(m2, rel=1e-8) == 0.14556930730487985
     assert pytest.approx(v2, rel=1e-8) == 0.04464961045010424
 
-    m3, v3 = model.minimize_mean_constraint(allow_short_selling=False, mean_constraint=0.3)
+    m3, v3 = model.minimize_sigma_mean_vol(allow_short_selling=False, mean_constraint=0.3)
     assert pytest.approx(m3, rel=1e-8) == 0.09536337000098741
     assert pytest.approx(v3, rel=1e-8) == 0.16915898241613025
 
-    m4, v4 = model.minimize_mean_constraint(allow_short_selling=True, mean_constraint=0.3)
+    m4, v4 = model.minimize_sigma_mean_vol(allow_short_selling=True, mean_constraint=0.3)
     assert pytest.approx(m4, rel=1e-8) == 0.29999999999999727
     assert pytest.approx(v4, rel=1e-8) == 0.19034548746893312
 
-    m5, v5 = model.optimize_sigma_constraint(allow_short_selling=False, vol_constraint=0.3)
+    m5, v5 = model.optimize_mean_mean_vol(allow_short_selling=False, vol_constraint=0.3)
     assert pytest.approx(m5, rel=1e-8) == 0.09536337000031798
     assert pytest.approx(v5, rel=1e-8) == 0.16915898241493366
 
-    m6, v6 = model.optimize_sigma_constraint(allow_short_selling=True, vol_constraint=0.3)
+    m6, v6 = model.optimize_mean_mean_vol(allow_short_selling=True, vol_constraint=0.3)
     assert pytest.approx(m6, rel=1e-8) == 0.3931619557311211
     assert pytest.approx(v6, rel=1e-8) == 0.3000000000000107

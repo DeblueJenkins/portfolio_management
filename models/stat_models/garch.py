@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy
 from scipy.optimize import minimize
 from models.stat_models.statmaths import jacobian_2sided, covariance, make_covariance_robust
 from scipy.stats import norm
@@ -7,7 +8,7 @@ import pandas as pd
 from numba import jit
 import warnings
 from scipy.optimize import minimize
-
+from typing import Dict
 
 class Garch:
 
@@ -250,16 +251,23 @@ class Garch:
             return pd.DataFrame({})
 
 
-def generate_garch_data(n: int, w: float, a: float, b: float, s2: float):
+def generate_garch_data(n: int, w: float, a: float, b: float, s2: float, dist: str = 'normal', *args, **kwargs):
 
     variances = np.zeros(n)
     data = np.zeros(n)
 
+    if dist == 'normal':
+        z = scipy.stats.norm.rvs(loc=0, scale=1, size=n)
+    elif dist == 't':
+        z = scipy.stats.t.rvs(*args, loc=0, scale=1, size=n)
+    else:
+        raise Exception('distribution of errors can only be normal or t')
+
     for i in range(n):
 
-        data[i] = np.sqrt(s2) * np.random.randn()
+        data[i] = np.sqrt(s2) * z[n]
         variances[i] = s2
-        s2 = w + b * s2 + a * data[i] * data[i]
+        s2 = w + b * s2 + a * data[i] ** 2
 
     return data, variances
 

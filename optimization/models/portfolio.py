@@ -3,8 +3,9 @@ import numpy as np
 from abc import ABC, abstractmethod
 import matplotlib.pyplot as plt
 from models.stat_models.statmaths import covariance_matrix, mean, cholesky
+from models.stat_models.garch import generate_garch_data
 import scipy.optimize as sco
-
+from scipy import stats
 
 def generate_portfolio_data(mu: np.array, cov: np.array, training_size: int, testing_size: int):
 
@@ -31,6 +32,38 @@ def generate_portfolio_data(mu: np.array, cov: np.array, training_size: int, tes
 
     else:
         ValueError("mu is of incorrect dimentions")
+
+def generate_portfolio_garch_data(mu: np.array, cov: np.array, n_time: int, omega: np.ndarray = None, alpha: np.ndarray = None,
+                                  beta: np.ndarray = None, dof: np.ndarray = None):
+
+    n_assets = len(mu)
+    assert len(mu) == cov.shape[0] == cov.shape[1]
+    if omega is None:
+        omega = np.random.uniform(0, 0.0005, size=n_assets)
+    if alpha is None:
+        alpha = np.random.uniform(0, 0.25, size=n_assets)
+    if beta is None:
+        beta = np.random.uniform(0, 0.05, size=n_assets)
+    if dof is None:
+        dof = np.random.uniform(1, 30, n_assets)
+
+    variances = np.diag(cov)
+    garch_variances = np.zeros((n_assets,n_time))
+    data = np.zeros((n_assets,n_time))
+    a = cholesky(cov)
+
+    eps = stats.t.rvs(dof, loc=0, scale=1, size=(n_time, n_assets))
+    # eps = stats.norm.rvs(loc=0, scale=1, size=(n_time, n_assets))
+    corr_eps = np.dot(eps, a.T).T
+
+    garch_variances[:, 0] = variances
+    data[:, 0] = mu + variances
+    for t in np.arange(1, n_time):
+        garch_variances[:,t] = omega + np.multiply(alpha, garch_variances[:, t-1]) + np.multiply(beta, corr_eps[:, t-1] ** 2)
+        data[:, t] = mu + corr_eps[:, t] * garch_variances[:, t] ** 0.5
+
+    return data[:, 1:]
+
 
 
 class PortfolioModel(ABC):
@@ -197,18 +230,19 @@ class PortfolioModel(ABC):
 
         return np.ones(self.m)/self.m
 
-    def get_bounds(self, allow_short_selling: bool):
+    def get_bounds(self, allow_short_selling: bool, allow_leverage: bool = True):
         """
         returns bounds for short selling and not short selling for the scipy optimizer
 
         :param allow_short_selling: boolean variance false or true
         :return: a set of tuples consistent with the scipy optimizer
         """
-        if allow_short_selling:
+        if allow_short_selling and allow_leverage:
             return tuple((None, None) for x in range(self.m))
-        else:
-
+        elif not allow_short_selling and allow_leverage:
             return tuple((0, None) for x in range(self.m))
+        else:
+            return tuple((0, 1) for x in range(self.m))
 
 
 class MarkowitzPortfolio(PortfolioModel):
@@ -408,7 +442,7 @@ class MarkowitzPortfolio(PortfolioModel):
         returns_list = []
 
         if np.shape(testing_sample)[1] != np.shape(self.x)[1]:
-            ValueError('number of assets in training_sample (' + str(np.shape(testing_sample)[1]) + ') is not the same as in testing_sample (' + str(np.shape(self.x)[1]) + ') ')
+            raise ValueError('number of assets in training_sample (' + str(np.shape(testing_sample)[1]) + ') is not the same as in testing_sample (' + str(np.shape(self.x)[1]) + ') ')
         else:
             for t in range(np.shape(testing_sample)[0]):
                 self.handle_input_data(data=training_sample)
@@ -431,46 +465,48 @@ class MarkowitzPortfolio(PortfolioModel):
         print("Volatility Realized Returns: " + str(np.round(vol_sample, 6)))
 
 
-class SharpPortfolio(PortfolioModel):
+class SharpePortfolio(PortfolioModel):
 
     def __init__(self, data, rf: float):
 
         super().__init__(data=data)
         self.rf = rf
 
-    def estimate_model(self, optimization_type: str, constraint: float = 0.0, allow_short_selling: bool = True) -> None:
+    def estimate_model(self, optimization_type: str, constraint: float = 0.0, allow_short_selling: bool = True, allow_leverage: bool = True, out: bool = False) -> None:
         """
         estimates the sharp portfolio
 
-        :param optimization_type: string either TANGENCY, MEANCONSTRAINT or VOLCONSTRAINT
+        :param optimization_type: string either TANGENCY, MEANCONSTRAINT, VOLCONSTRAINT, SHARPE
         :param constraint: a constraint for mean or vol depending on optimization_type
         :param allow_short_selling: boolean variable false or true
         :return: non but parameters are set
         """
 
-        if optimization_type.upper() == ["TANGENCY", "SHARP"]:
-            self.weights = self.get_tangent_portfolio_weights(allow_short_selling)
+        if optimization_type.upper() in ["TANGENCY", "SHARPE"]:
+            self.weights = self.get_tangent_portfolio_weights(allow_short_selling, allow_leverage)
             self.mu_p, self.vol_p = self.compute_mean_vol(w=self.weights)
             self.fitted = True
 
         else:
 
             if constraint <= 0.0:
-                ValueError("fill in a proper constraint")
+                raise ValueError("fill in a proper constraint")
 
             else:
                 super().estimate_model(optimization_type=optimization_type, constraint=constraint,
                                        allow_short_selling=allow_short_selling)
+        if out:
+            return self.weights
 
-    def sharp_ratio(self, w: np.array):
+    def sharpe_ratio(self, w: np.ndarray):
 
         return (np.dot(w.T, self.mu) - self.rf) / self.portfolio_volatility(w=w)
 
-    def negative_sharp_ratio(self, w: np.array):
+    def negative_sharpe_ratio(self, w: np.ndarray):
 
-        return -self.sharp_ratio(w=w)
+        return -self.sharpe_ratio(w=w)
 
-    def portfolio_return(self, w: np.array) -> float:
+    def portfolio_return(self, w: np.ndarray) -> float:
         """
         returns the mean portfolio return given a set of weights
 
@@ -480,7 +516,22 @@ class SharpPortfolio(PortfolioModel):
 
         return super().portfolio_return(w) + (1 - sum(w)) * self.rf
 
-    def negative_portfolio_return(self, w: np.array) -> float:
+    def portfolio_excess_return(self, w: np.ndarray, rf: float) -> float:
+        """
+        returns the mean excess portfolio return given a set of weights
+
+        :param w: array of weights
+        :return: mean return
+        """
+
+        if len(w) == len(self.mu):
+            if np.shape(w) != np.shape(self.mu):
+                w = w[:, np.newaxis]
+            return float(np.dot(w.T, np.array(self.mu - rf)))
+        else:
+            ValueError("Shapes of weight and mean vector are not the same")
+
+    def negative_portfolio_return(self, w: np.ndarray) -> float:
         """
         returns the mean portfolio return given a set of weights
 
@@ -490,7 +541,7 @@ class SharpPortfolio(PortfolioModel):
 
         return - self.portfolio_return(w=w)
 
-    def get_tangent_portfolio_weights(self, allow_short_selling: bool = True) -> np.array:
+    def get_tangent_portfolio_weights(self, allow_short_selling: bool = True, allow_leverage: bool = True) -> np.ndarray:
         """
         portfolio with maximum sharp ratio
 
@@ -498,7 +549,7 @@ class SharpPortfolio(PortfolioModel):
         :return: a set of weights
         """
 
-        if allow_short_selling:
+        if allow_short_selling and allow_leverage:
             ones = np.ones(np.shape(self.mu))
             cov_inv = np.linalg.inv(self.cov)
             top = np.dot(cov_inv, np.subtract(self.mu, self.rf * ones))
@@ -506,8 +557,8 @@ class SharpPortfolio(PortfolioModel):
             res = top/bot
         else:
             cons = [{'type': 'eq', 'fun': lambda x: sum(x) - 1}]
-            res = sco.minimize(self.negative_sharp_ratio, x0=self.equal_weights(), method='SLSQP',
-                               bounds=self.get_bounds(allow_short_selling=allow_short_selling),
+            res = sco.minimize(self.negative_sharpe_ratio, x0=self.equal_weights(), method='SLSQP',
+                               bounds=self.get_bounds(allow_short_selling=allow_short_selling, allow_leverage=allow_leverage),
                                constraints=cons, tol=1e-15)
             res = res.x[:, np.newaxis]
 
@@ -540,7 +591,7 @@ class SharpPortfolio(PortfolioModel):
 
         return res
 
-    def optimize_mean_weights(self, vol_constraint: float, allow_short_selling: bool = True) -> np.array:
+    def optimize_mean_weights(self, vol_constraint: float, allow_short_selling: bool = True) -> np.ndarray:
 
         """
         computes the maximum return given a volatility constraint
@@ -558,6 +609,49 @@ class SharpPortfolio(PortfolioModel):
 
         res = res.x[:, np.newaxis]
         return res
+
+
+class KellyPortfolio(SharpePortfolio):
+
+    def __init__(self, data, rf: float):
+        super().__init__(data, rf)
+    def kelly_criterion(self, w: np.ndarray):
+
+        return self.rf + self.portfolio_excess_return(w, self.rf) - self.portfolio_var(w) / 2
+
+    def estimate_model(self, optimization_type: str = "UNCONSTRAINED_MEAN_OR_VOL", constraint: float = 0.0,
+                       allow_short_selling: bool = True, allow_leverage: bool = True, out: bool = False) -> None:
+
+
+        if optimization_type == 'VOLCONSTRAINT':
+            additional_cons = {'type': 'eq', 'fun': lambda x: np.linalg.multi_dot([x.T, self.cov, x]) - constraint}
+        elif optimization_type == 'MEANCONSTRAINT':
+            additional_cons = {'type': 'eq', 'fun': lambda x: np.dot(x.T, self.mu) + (1 - sum(x)) * self.rf - constraint}
+        elif optimization_type == 'UNCONSTRAINED_MEAN_OR_VOL':
+            additional_cons = None
+        else:
+            raise Exception('optimization_type can only be VOLCONSTRAINT, MEANCONSTRAINT, UNCONSTRAINED_MEAN_OR_VOL')
+
+        self.weights = self.optimize_kelly_criterion(allow_short_selling, allow_leverage, additional_cons)
+        self.mu_p, self.vol_p = self.compute_mean_vol(w=self.weights)
+        self.fitted = True
+
+        if out:
+            return self.weights
+
+    def optimize_kelly_criterion(self, allow_short_selling: bool = True, allow_leverage: bool = True, additional_constraint: dict = None):
+        if allow_leverage and allow_short_selling:
+            w = np.linalg.inv(self.cov).dot(self.mu - self.rf)
+            return w
+        else:
+            cons = [{'type': 'eq', 'fun': lambda x: sum(x) - 1}]
+            if additional_constraint is not None:
+                cons.append(additional_constraint)
+            func = lambda x: -1 * self.kelly_criterion(x)
+            res = sco.minimize(func, x0=self.equal_weights(), method='SLSQP', constraints=cons,
+                               bounds=self.get_bounds(allow_short_selling, allow_leverage), tol=1e-15)
+            w = res.x[:, np.newaxis]
+            return w
 
 
 

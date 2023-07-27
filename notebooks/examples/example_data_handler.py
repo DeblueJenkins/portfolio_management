@@ -33,5 +33,5 @@ params = {
 
 data = eikon_api.load_timeseries(**params)
 preprocessor = DataHandler(data=data, date_col=params['date_field'][1])
-rets = preprocessor.get_returns(period=20)
+rets = preprocessor.get_returns(period=1)
 print(rets)

@@ -12,7 +12,7 @@ def covariance_matrix(data: np.array) -> np.array:
     return np.dot(x.T, x)/(len(x) - 1)
 
 
-def mean(data: np.array) -> np.array:
+def mean(data: np.array) -> np.ndarray:
     """
     compute the multivariate mean
 
@@ -23,7 +23,7 @@ def mean(data: np.array) -> np.array:
     return np.mean(data, axis=0).reshape(n_assets, 1)
 
 
-def cholesky(c: np.array) -> np.array:
+def cholesky(c: np.array) -> np.ndarray:
     """
     computes the cholesky decomposition: transpose(a) * a = c
 
