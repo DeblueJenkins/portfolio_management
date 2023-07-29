@@ -6,8 +6,12 @@ import pickle
 import os
 
 
-data_path = r'C:\Users\HP\Documents\GitHub\portfolio_management\models\data'
-path_apikeys = r'C:\Users\HP\IdeaProjects\FinIgor\data\apikeys.csv'
+# data_path = r'C:\Users\HP\Documents\GitHub\portfolio_management\models\data'
+# path_apikeys = r'C:\Users\HP\IdeaProjects\FinIgor\data\apikeys.csv'
+
+data_path = r'C:\Users\serge\IdeaProjects\portfolio_manager\portfolio_management\models\data'
+path_apikeys = r'C:\Users\serge\OneDrive\Documents\apikeys.csv'
+
 eikon_api = Eikon(path_apikeys)
 
 index = '.SPX'
