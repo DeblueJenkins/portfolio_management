@@ -33,11 +33,11 @@ def generate_portfolio_data(mu: np.array, cov: np.array, training_size: int, tes
     else:
         ValueError("mu is of incorrect dimentions")
 
-def generate_portfolio_garch_data(mu: np.array, cov: np.array, n_time: int, omega: np.ndarray = None, alpha: np.ndarray = None,
+def generate_portfolio_garch_data(mu: np.array, initial_variances: np.ndarray, corr: np.array, n_time: int, omega: np.ndarray = None, alpha: np.ndarray = None,
                                   beta: np.ndarray = None, dof: np.ndarray = None):
 
     n_assets = len(mu)
-    assert len(mu) == cov.shape[0] == cov.shape[1]
+    assert len(mu) == corr.shape[0] == corr.shape[1]
     if omega is None:
         omega = np.random.uniform(0, 0.0005, size=n_assets)
     if alpha is None:
@@ -47,20 +47,28 @@ def generate_portfolio_garch_data(mu: np.array, cov: np.array, n_time: int, omeg
     if dof is None:
         dof = np.random.uniform(1, 30, n_assets)
 
-    variances = np.diag(cov)
+
     garch_variances = np.zeros((n_assets,n_time))
     data = np.zeros((n_assets,n_time))
-    a = cholesky(cov)
+    cov = np.zeros((n_assets, n_assets))
+
+
 
     eps = stats.t.rvs(dof, loc=0, scale=1, size=(n_time, n_assets))
     # eps = stats.norm.rvs(loc=0, scale=1, size=(n_time, n_assets))
-    corr_eps = np.dot(eps, a.T).T
+    # corr_eps = np.dot(eps, a.T).T
+    np.fill_diagonal(cov, (omega / (1 - alpha - beta)))
+    cov = cov.dot(corr).dot(cov)
+    a = cholesky(cov)
+    eps = eps.dot(a.T).T
 
-    garch_variances[:, 0] = variances
-    data[:, 0] = mu + variances
+    garch_variances[:, 0] = initial_variances
+    data[:, 0] = mu + eps
     for t in np.arange(1, n_time):
-        garch_variances[:,t] = omega + np.multiply(alpha, garch_variances[:, t-1]) + np.multiply(beta, corr_eps[:, t-1] ** 2)
-        data[:, t] = mu + corr_eps[:, t] * garch_variances[:, t] ** 0.5
+        garch_variances[:,t] = omega + np.multiply(alpha, garch_variances[:, t-1]) + np.multiply(beta, eps[:, t-1] ** 2)
+    np.fill_diagonal(cov, garch_variances)
+    cov = cov.dot(corr).dot(cov)
+
 
     return data[:, 1:]
 
