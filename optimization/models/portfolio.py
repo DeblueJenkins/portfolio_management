@@ -57,15 +57,14 @@ def generate_portfolio_garch_data(mu: np.array, initial_variances: np.ndarray, c
     eps = stats.t.rvs(dof, loc=0, scale=1, size=(n_time, n_assets))
     # eps = stats.norm.rvs(loc=0, scale=1, size=(n_time, n_assets))
     # corr_eps = np.dot(eps, a.T).T
-    np.fill_diagonal(cov, (omega / (1 - alpha - beta)))
+    np.fill_diagonal(cov, initial_variances)
     cov = cov.dot(corr).dot(cov)
     a = cholesky(cov)
     eps = eps.dot(a.T).T
 
-    garch_variances[:, 0] = initial_variances
-    data[:, 0] = mu + eps
+
     for t in np.arange(1, n_time):
-        garch_variances[:,t] = omega + np.multiply(alpha, garch_variances[:, t-1]) + np.multiply(beta, eps[:, t-1] ** 2)
+        data[:,t] = omega + np.multiply(alpha, garch_variances[:, t-1]) + np.multiply(beta, eps[:, t-1] ** 2)
     np.fill_diagonal(cov, garch_variances)
     cov = cov.dot(corr).dot(cov)
 

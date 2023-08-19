@@ -1,0 +1,309 @@
+ASSETS:
+  MAA.N:
+    constr: 0.035
+  ESS.N:
+    constr: 0.035
+  JBHT.OQ:
+    constr: 0.035
+  DOV.N:
+    constr: 0.035
+  VFC.N:
+    constr: 0.035
+  PPL.N:
+    constr: 0.035
+  CMCSA.OQ:
+    constr: 0.035
+  PGR.N:
+    constr: 0.035
+  CMA.N:
+    constr: 0.035
+  MCD.N:
+    constr: 0.035
+  APA.OQ:
+    constr: 0.035
+  PPG.N:
+    constr: 0.035
+  MS.N:
+    constr: 0.035
+  ITW.N:
+    constr: 0.035
+  FICO.N:
+    constr: 0.035
+  FAST.OQ:
+    constr: 0.035
+  UPS.N:
+    constr: 0.035
+  HUM.N:
+    constr: 0.035
+  XRAY.OQ:
+    constr: 0.035
+  CPT.N:
+    constr: 0.035
+  CPB.N:
+    constr: 0.035
+  TJX.N:
+    constr: 0.035
+  BAX.N:
+    constr: 0.035
+  CAG.N:
+    constr: 0.035
+  WEC.N:
+    constr: 0.035
+  NTAP.OQ:
+    constr: 0.035
+  MAA.N:
+    constr: 0.035
+  MRO.N:
+    constr: 0.035
+  CHRW.OQ:
+    constr: 0.035
+  SPG.N:
+    constr: 0.035
+  MTB.N:
+    constr: 0.035
+  ADI.OQ:
+    constr: 0.035
+  BLK.N:
+    constr: 0.035
+  COP.N:
+    constr: 0.035
+  BEN.N:
+    constr: 0.035
+  DOV.N:
+    constr: 0.035
+  HWM.N:
+    constr: 0.035
+  NTRS.OQ:
+    constr: 0.035
+  ETN.N:
+    constr: 0.035
+  CLX.N:
+    constr: 0.035
+  MSI.N:
+    constr: 0.035
+  MO.N:
+    constr: 0.035
+  CI.N:
+    constr: 0.035
+  DRI.N:
+    constr: 0.035
+  UPS.N:
+    constr: 0.035
+  PHM.N:
+    constr: 0.035
+  JKHY.OQ:
+    constr: 0.035
+  GILD.OQ:
+    constr: 0.035
+  TFX.N:
+    constr: 0.035
+  AON.N:
+    constr: 0.035
+  SNA.N:
+    constr: 0.035
+  NVR.N:
+    constr: 0.035
+  TXT.N:
+    constr: 0.035
+  EMR.N:
+    constr: 0.035
+  ADSK.OQ:
+    constr: 0.035
+  PTC.OQ:
+    constr: 0.035
+  WMT.N:
+    constr: 0.035
+  WEC.N:
+    constr: 0.035
+  MKC.N:
+    constr: 0.035
+  CMS.N:
+    constr: 0.035
+  ARE.N:
+    constr: 0.035
+  ABT.N:
+    constr: 0.035
+  K.N:
+    constr: 0.035
+  MKC.N:
+    constr: 0.035
+  MCD.N:
+    constr: 0.035
+  DE.N:
+    constr: 0.035
+  BIIB.OQ:
+    constr: 0.035
+  HSIC.OQ:
+    constr: 0.035
+  KLAC.OQ:
+    constr: 0.035
+  AMAT.OQ:
+    constr: 0.035
+  UNP.N:
+    constr: 0.035
+  NEM.N:
+    constr: 0.035
+  EA.OQ:
+    constr: 0.035
+  RE.N:
+    constr: 0.035
+  ODFL.OQ:
+    constr: 0.035
+  PEP.OQ:
+    constr: 0.035
+  PNR.N:
+    constr: 0.035
+  HSIC.OQ:
+    constr: 0.035
+  MTD.N:
+    constr: 0.035
+  RSG.N:
+    constr: 0.035
+  LH.N:
+    constr: 0.035
+  FI.N:
+    constr: 0.035
+  ABC.N:
+    constr: 0.035
+  ANSS.OQ:
+    constr: 0.035
+  EBAY.OQ:
+    constr: 0.035
+  BBY.N:
+    constr: 0.035
+  EMN.N:
+    constr: 0.035
+  MCK.N:
+    constr: 0.035
+  PHM.N:
+    constr: 0.035
+  UPS.N:
+    constr: 0.035
+  WAT.N:
+    constr: 0.035
+  MCHP.OQ:
+    constr: 0.035
+  DUK.N:
+    constr: 0.035
+  LEN.N:
+    constr: 0.035
+  HON.OQ:
+    constr: 0.035
+  GIS.N:
+    constr: 0.035
+  CSCO.OQ:
+    constr: 0.035
+  FDX.N:
+    constr: 0.035
+  USB.N:
+    constr: 0.035
+  SEE.N:
+    constr: 0.035
+  RVTY.N:
+    constr: 0.035
+  AME.N:
+    constr: 0.035
+  TDY.N:
+    constr: 0.035
+  DIS.N:
+    constr: 0.035
+  EMN.N:
+    constr: 0.035
+  J.N:
+    constr: 0.035
+  FDS.N:
+    constr: 0.035
+  WMB.N:
+    constr: 0.035
+  WEC.N:
+    constr: 0.035
+  TSCO.OQ:
+    constr: 0.035
+  AVB.N:
+    constr: 0.035
+  IT.N:
+    constr: 0.035
+  FRT.N:
+    constr: 0.035
+  PCG.N:
+    constr: 0.035
+  MAR.OQ:
+    constr: 0.035
+  VRSN.OQ:
+    constr: 0.035
+  PWR.N:
+    constr: 0.035
+  EQR.N:
+    constr: 0.035
+  PAYX.OQ:
+    constr: 0.035
+  J.N:
+    constr: 0.035
+  TTWO.OQ:
+    constr: 0.035
+  EXPD.OQ:
+    constr: 0.035
+  EQT.N:
+    constr: 0.035
+  POOL.OQ:
+    constr: 0.035
+  ACGL.OQ:
+    constr: 0.035
+  SBUX.OQ:
+    constr: 0.035
+  MHK.N:
+    constr: 0.035
+  TSN.N:
+    constr: 0.035
+  GE.N:
+    constr: 0.035
+  HAL.N:
+    constr: 0.035
+  BKNG.OQ:
+    constr: 0.035
+  LNT.OQ:
+    constr: 0.035
+  TSN.N:
+    constr: 0.035
+  ES.N:
+    constr: 0.035
+  EL.N:
+    constr: 0.035
+  PCG.N:
+    constr: 0.035
+  VMC.N:
+    constr: 0.035
+  BBWI.N:
+    constr: 0.035
+  HIG.N:
+    constr: 0.035
+  CHRW.OQ:
+    constr: 0.035
+  UNP.N:
+    constr: 0.035
+  EIX.N:
+    constr: 0.035
+  CAT.N:
+    constr: 0.035
+  FRT.N:
+    constr: 0.035
+  EQT.N:
+    constr: 0.035
+  USB.N:
+    constr: 0.035
+  ROL.N:
+    constr: 0.035
+  O.N:
+    constr: 0.035
+  CPT.N:
+    constr: 0.035
+  WFC.N:
+    constr: 0.035
+MODEL:
+  hybrid: False
+  main_factors:
+    PCA: 5
+  secondary_factors: []
+
+
+

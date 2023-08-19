@@ -30,11 +30,10 @@ class LinearRegressionModel:
         self.p = x.shape[1] - 1
         self.n = len(self.y)
         self.conf = conf
-        self.reg_param = reg_param
         self.xTx = np.dot(x.T, x)
 
         if reg_param is None:
-            self.beta = self.ols()
+            self.beta = self.fit()
         else:
             self.beta = self.ridged_ols(self.reg_param)
 
@@ -44,18 +43,26 @@ class LinearRegressionModel:
         self.df_res = self.n - self.p
         self.df_total = self.n - 1
 
-    def ols(self) -> np.array:
+    def fit(self, how, *args, **kwargs) -> np.ndarray:
+
+        if how is None:
+            how = 'ols'
+
+        if how == 'ols':
+            return self._fit_ols(*args, **kwargs)
+        elif how == 'ridge':
+            return self._fit_ridge_ols(*args, **kwargs)
+
+    def _fit_ols(self):
         """
         computes the standard ols estimator
-
         :return: beta
         """
         return np.linalg.multi_dot([np.linalg.inv(self.xTx), self.x.T, self.y])
 
-    def ridged_ols(self, reg_param: float) -> np.array:
+    def _fit_ridge_ols(self, reg_param: float) -> np.ndarray:
         """
         computes the standard ols estimator with regularisation
-
         :param reg_param:
         :return: beta
         """
@@ -183,24 +190,26 @@ class MultiOutputLinearRegressionModel:
         else:
             print("X and y are not correct dimensions")
 
+
+        # FIT SHOULD BE OUTSIDE INIT, MultiOutput should have a fit() method
         x = np.insert(x, 0, 1, axis=1)
         self.x = x
         self.y = y
         xtx_inv = np.linalg.inv(np.dot(self.x.T, self.x))
         self.betas = np.linalg.multi_dot([xtx_inv, self.x.T, self.y])
 
-    def set_tickers(self, tickers: list):
-        """
-        sets the tickers
-
-        :param tickers: list of tickers
-        :return: none
-        """
-        if self.n_y_s == len(tickers):
-            self.tickers = tickers
-        else:
-            self.tickers = None
-            print("length tickers is: " + str(len(tickers)) + " number of assets is " + str(self.n_y_s))
+    #
+    # def set_tickers(self, tickers: list):
+    #     """
+    #     sets the tickers
+    #
+    #     :param tickers: list of tickers
+    #     :return: none
+    #     """
+    #     if (isinstance(tickers, list)) and (self.n_y_s == len(tickers)):
+    #         self.tickers = tickers
+    #     elif tickers is None:
+    #         self.tickers = None
 
     def plot_single(self, index: int, name: str = None) -> None:
         """

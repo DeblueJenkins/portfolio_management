@@ -45,6 +45,10 @@ class RollingModel:
 
         self.rolling_window = rolling_window
 
+        # indexes are date of estimation, columns are prediction dates
+        self.errors_insample_all = pd.DataFrame()
+        self.errors_outsample_all = pd.DataFrame()
+
     def estimate(self, config: dict, RIC: str = None):
 
         """
@@ -87,16 +91,16 @@ class RollingModel:
             try:
                 x = self.x[:i+self.rolling_window, :]
                 y = self.y[:i+self.rolling_window]
-                date = self.index[i+self.rolling_window]
+                date_fit = self.index[i+self.rolling_window]
                 self.size_of_rolling_windows.append(len(x))
                 i += 1
                 if config['PCA']:
                     pca_model = PcaHandler(x)
-                    self.singular_values[date] = pca_model.singular_values
-                    self.eig_vals[date] = pca_model.eig_vals
-                    self.eig_vecs[date] = pca_model.eig_vecs
+                    self.singular_values[date_fit] = pca_model.singular_values
+                    self.eig_vals[date_fit] = pca_model.eig_vals
+                    self.eig_vecs[date_fit] = pca_model.eig_vecs
                     X = pca_model.components(config['n_components'])
-                    self.factors[date] = X
+                    self.factors[date_fit] = X
                 # this should be outside, independent of this loop
                 if config['OLS']:
                     ols = LinearRegressionModel(X, y)
@@ -105,26 +109,26 @@ class RollingModel:
                     # these are errors with no data leakage, so e_{t}|OLS(PC_{t-n,t}), e_{t+1}|OLS(PC_{t-n,t+1}), etc.
                     errors_insample_last.append(ols.residuals[-1][0])
                     # these are usual errors (with data leakage), so e_{t-n:t}|OLS(PC_{t-n,t}, e_{t-n:t+1}|OLS(PC_{t-n,t+1}
-                    errors_insample_all[date] = ols.residuals.flatten()
-                    all_factor_loadings[date] = params
+                    errors_insample_all[date_fit] = ols.residuals.flatten()
+                    all_factor_loadings[date_fit] = params
 
             except IndexError:
                 continue
 
         self.factor_loadings = pd.DataFrame.from_dict(all_factor_loadings, orient='index')
         self.errors_insample_all = pd.DataFrame.from_dict(errors_insample_all, orient='index')
-
+        self.errors_insample_all.columns = self.index[:-1]
         self._get_out_of_sample_errors()
 
         self._y = self.y[:self.n-self.rolling_window]
         self.errors_insample_last = np.array(errors_insample_last)
+        self.errors_insample_last = pd.Series(data=self.errors_insample_last, index=self.index[self.rolling_window:])
         ss_res = np.dot(self.errors_insample_last.T, self.errors_insample_last)
         ss_tot = np.dot((self._y - np.mean(self._y)).T, self._y - np.mean(self._y))
         df_res = len(self.errors_insample_last) - self.m
         df_tot = len(self.errors_insample_last) - 1
         self.r_sqr = float(1 - ss_res/ss_tot)
         self.r_sqr_adj = float(1 - (ss_res/df_res)/(ss_tot/df_tot))
-        self.errors_insample_all = pd.DataFrame.from_dict(errors_insample_all, orient='index').T
 
     def _get_out_of_sample_errors(self):
         """
@@ -149,7 +153,6 @@ class RollingModel:
             date_estimation = self.factor_loadings.index[i]
             dates_after_estimation = self.factor_loadings.index[i+1:].values
             factor_loadings = self.factor_loadings.loc[date_estimation].values
-            n_factors = len(factor_loadings)
             for j in range(len(dates_after_estimation)):
                 date_next = dates_after_estimation[j]
                 n_data_used, n_factors = self.factors[date_next].shape

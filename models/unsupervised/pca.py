@@ -5,17 +5,6 @@ import pandas as pd
 from abc import ABC, abstractmethod
 
 
-
-
-
-
-
-
-
-
-
-
-
 class PcaBaseClass(ABC):
 
     @staticmethod
