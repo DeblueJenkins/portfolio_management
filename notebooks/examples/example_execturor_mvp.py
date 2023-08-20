@@ -65,6 +65,9 @@ returns.dropna(inplace=True, axis=1)
 
 linear_model = LinearFactorModel(config_path='config_example.yaml', portfolio=portfolio, data=returns)
 
+# this should be a ModelSelector class
+# trials = linear_model.tune_hyperparams()
+
 factors, factor_loadings = linear_model.fit()
 
 optimizer = Optimizer(config_path='config_example.yaml', factors=factors, factor_loadings=factor_loadings, portfolio=portfolio)

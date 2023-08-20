@@ -304,6 +304,7 @@ MODEL:
   main_factors:
     PCA: 5
   secondary_factors: []
+  regression_method: ols
 
 
 

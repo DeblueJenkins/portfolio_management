@@ -26,8 +26,8 @@ def test_multi_linear():
     test_multi_lin_model = MultiOutputLinearRegressionModel(x=test_model.components(n=7),
                                                             y=np.array(data),
                                                             tickers=list(data.columns))
-    assert test_multi_lin_model.n == 396
-    assert test_multi_lin_model.n_y_s == 69
+    assert test_multi_lin_model.n_y1 == 396
+    assert test_multi_lin_model.n_y2 == 69
     test_matrix = pd.read_csv(os.path.join(os.getcwd(), "testdata", "multi_linear_test_betas.csv"), index_col=0)
     test_matrix = np.array(test_matrix) - test_multi_lin_model.betas
     for i in range(np.shape(test_matrix)[0]):

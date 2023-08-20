@@ -2,136 +2,171 @@ import numpy as np
 from scipy.stats import t
 import pandas as pd
 import matplotlib.pyplot as plt
+from typing import List
+import warnings
+from dataclasses import dataclass, field
+from abc import ABC
+def generate_regression_data(betas: np.array, sigma: float, n: int = 100000):
+    """
 
+    :param betas: vector of betas
+    :param sigma: variance of the outputs
+    :param n: number of observations
+    :return: matrix of generated x explanatory variables and a vector of y dependent variables.
+    """
+    b = betas[:, np.newaxis]
+    m = len(b) - 1
+    x = np.random.normal(0, 1, size=(n, m))
+    x_r = np.c_[np.ones(n), x]
+    y = np.dot(x_r, b) + np.random.normal(0, sigma, size=(n, 1))
+    return x, y
 
-class LinearRegressionModel:
+@dataclass
+class Model(ABC):
+    x : np.ndarray
+    y : np.ndarray
+    add_intercept: bool = True
+    method: str = 'ols'
+    conf: float = 0.95
 
-    def __init__(self, x: np.array, y: np.array, conf: float = 0.05, reg_param: float = None):
-        """
-        simple multi variate regression model
+    def __post_init__(self):
+            if self.add_intercept:
+                self.x = np.insert(self.x, 0, 1, axis=1)
+            self.n_y1 = len(self.y)
+            self.n_x1, self.n_x2 = np.shape(self.x)
 
-        :param x: matrix of explanatory variables
-        :param y: vector of dependent variables
-        :param conf: alpha for parameter tests
-        :param reg_param: regularization parameter
-        """
-        y = np.array(y).reshape(len(y), 1)
+            if self.n_x1 == self.n_y1:
+                self.x = np.array(self.x).reshape(self.n_x1, self.n_x2)
+            elif self.n_x2 == self.n_y1:
+                self.x = np.array(self.x).reshape(self.n_x2, self.n_x1)
+            else:
+                raise Exception("X and y are not correct dimensions")
 
-        if np.shape(x)[0] == len(y):
-            x = np.array(x).reshape(np.shape(x)[0], np.shape(x)[1])
-        elif np.shape(x)[1] == len(y):
-            x = np.array(x).reshape(np.shape(x)[1], np.shape(x)[0])
-        else:
-            print("X and y are not correct dimensions")
+class LinearRegressionModel(Model):
 
-        x = np.insert(x, 0, 1, axis=1)
-        self.x = x
-        self.y = y
-        self.p = x.shape[1] - 1
-        self.n = len(self.y)
-        self.conf = conf
-        self.xTx = np.dot(x.T, x)
+    def __init__(self, *args, l1: float = 0, w: np.ndarray = None, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        if reg_param is None:
-            self.beta = self.fit()
-        else:
-            self.beta = self.ridged_ols(self.reg_param)
+        if self.method == 'ols':
+            self.p = self.x.shape[1] - 1
+        elif self.method == 'ridge':
+            self.p = self.x.shape[1] - 2
 
+        if w is None:
+            w = np.repeat(1, self.n_y1)
+        if w.ndim != 1:
+            raise Exception('weights must be provided as a vector')
+
+        self.W = np.diag(w)
+        self.l1 = l1
+        self.df_res = self.n_y1 - self.p
+        self.df_total = self.n_y1 - 1
+        self._reshape_y()
+
+        ## TO DO:
+        # self.betas, self.residuals, self.mse should be setter/getters
+
+    def _reshape_y(self):
+        self.y = self.y.reshape(self.n_y1, 1)
+
+    def get_errors(self) -> None:
         self.residuals = np.dot(self.x, self.beta) - self.y
-        self.sigma = np.sqrt(np.dot(self.residuals.T, self.residuals)/(len(y) - len(self.beta) + 1))
-        self.mse = self.compute_mse(self.beta)
-        self.df_res = self.n - self.p
-        self.df_total = self.n - 1
+    def get_sigma(self):
+        if len(self.residuals) == 0:
+            self.get_errors()
+        return np.sqrt(np.dot(self.residuals.T, self.residuals)/(len(self.y) - len(self.beta) + 1))
 
-    def fit(self, how, *args, **kwargs) -> np.ndarray:
-
-        if how is None:
-            how = 'ols'
-
-        if how == 'ols':
-            return self._fit_ols(*args, **kwargs)
-        elif how == 'ridge':
-            return self._fit_ridge_ols(*args, **kwargs)
-
-    def _fit_ols(self):
-        """
-        computes the standard ols estimator
-        :return: beta
-        """
-        return np.linalg.multi_dot([np.linalg.inv(self.xTx), self.x.T, self.y])
-
-    def _fit_ridge_ols(self, reg_param: float) -> np.ndarray:
+    def fit(self, out: bool = False) -> np.ndarray:
         """
         computes the standard ols estimator with regularisation
         :param reg_param:
         :return: beta
         """
-        reg_mat = self.xTx + reg_param * np.ones(len(self.xTx))
-        return np.linalg.multi_dot([np.linalg.inv(reg_mat), self.x.T, self.y])
+        xTx = self.x.T.dot(self.W).dot(self.x)
+        reg_mat = xTx + self.l1 * np.ones(len(xTx))
+        self.beta = np.linalg.multi_dot([np.linalg.inv(reg_mat), self.x.T, self.W, self.y])
+        if out:
+            return self.beta
 
-    def compute_mse(self, beta: np.array) -> float:
+    def predict(self, X):
+        if self.add_intercept:
+            if X.ndim == 1:
+                X = np.insert(X, 0, 1)
+            elif X.ndim == 2:
+                X = np.insert(X, 0, 1, axis=1)
+        return self.beta.T.dot(X)
+
+    def diagnostics(self):
+        self.get_errors()
+        self.get_sigma()
+        mse = self.compute_mse()
+        r2 = self.get_r_square()
+        r2_adj = self.get_r_square_adj()
+        return {'mse': mse, 'r2': r2, 'r2_adj': r2_adj}
+    def compute_mse(self) -> float:
         """
         computes the MSE based on a beta vector (can be used to compare regularised vs non-regularised estimators)
 
         :param beta: vector of parameters
         :return: mse
         """
-        epsilon = np.dot(self.x, beta) - self.y
-        return float(np.dot(epsilon.T, epsilon)/self.n)
-
-    def compute_standard_errors(self) -> np.array:
+        epsilon = np.dot(self.x, self.beta) - self.y
+        return float(np.dot(epsilon.T, epsilon) / self.n_y1)
+    def compute_standard_errors(self, how: str = 'ols') -> np.ndarray:
         """
         computes the standard errors
 
         :return: np.array of standard errors per beta parameter
         """
-        if self.reg_param is not None:
-            print("Do not know whether this works for ridged regression")
-
-        std_err = np.ones(shape=(np.shape(self.beta)))
-        xtx_inv = np.linalg.inv(self.xTx)
-        for i in range(len(self.beta)):
-            std_err[i] = self.sigma * np.sqrt(xtx_inv[i][i])
+        if how == 'ols':
+            std_err = np.ones(shape=(np.shape(self.beta)))
+            xtx_inv = np.linalg.inv(self.xTx)
+            for i in range(len(self.beta)):
+                std_err[i] = self.sigma * np.sqrt(xtx_inv[i][i])
+        elif how == 'ridge':
+            # Do not know whether this works for ridged regression
+            warnings.warn('Did not calculate errors for ridge regression')
+            std_err = np.repeat(np.nan, len(self.beta))
+        else:
+            raise Exception(f'{how} method not implemented')
 
         return std_err
-
-    def t_tests(self) -> pd.DataFrame:
+    def perform_t_tests(self, method: str = 'ols') -> pd.DataFrame:
         """
         performs the t-tests for each parameter
 
         :return: pd.DataFrame of test results
         """
-        std_err = self.compute_standard_errors()
-        df = len(self.y) - len(self.beta) + 1
-        top_quantile = self.beta + t.ppf(1-self.conf/2, df=df) * std_err
-        bot_quantile = self.beta + t.ppf(self.conf/2, df=df) * std_err
-        checks = []
-        for a, b in zip(bot_quantile, top_quantile):
-            if a <= 0 <= b:
-                checks.append("Not Significant")
-            else:
-                checks.append("Significant")
+        if method == 'ols':
+            std_err = self.compute_standard_errors()
+            df = len(self.y) - len(self.beta) + 1
+            top_quantile = self.beta + t.ppf(1-self.conf/2, df=df) * std_err
+            bot_quantile = self.beta + t.ppf(self.conf/2, df=df) * std_err
+            checks = []
+            for a, b in zip(bot_quantile, top_quantile):
+                if a <= 0 <= b:
+                    checks.append("Not Significant")
+                else:
+                    checks.append("Significant")
 
-        return pd.DataFrame({"bot quantile:": list(bot_quantile),
-                             "top quantile:": list(top_quantile),
-                             "Results": checks})
-
-    def r_square(self) -> float:
+            return pd.DataFrame({"bot quantile:": list(bot_quantile),
+                                 "top quantile:": list(top_quantile),
+                                 "Results": checks})
+        else:
+            raise Exception(f'{method} t-tests not implemented')
+    def get_r_square(self) -> float:
         """
         coefficient of determination % explained variance in sample
-
         :return: float
         """
         ss_res = np.dot(self.residuals.T, self.residuals)
         ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
         return float(1 - ss_res/ss_tot)
-
-    def r_square_adj(self) -> float:
+    def get_r_square_adj(self) -> float:
 
         ss_res = np.dot(self.residuals.T, self.residuals)
         ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
         return float(1 - (ss_res/self.df_res) / (ss_tot/self.df_total))
-
     def plot(self) -> None:
         """
         plots the real values vs the predictions
@@ -152,25 +187,10 @@ class LinearRegressionModel:
         fig.show()
 
 
-def generate_regression_data(betas: np.array, sigma: float, n: int = 100000):
-    """
+class MultiOutputLinearRegressionModel(LinearRegressionModel):
 
-    :param betas: vector of betas
-    :param sigma: variance of the outputs
-    :param n: number of observations
-    :return: matrix of generated x explanatory variables and a vector of y dependent variables.
-    """
-    b = betas[:, np.newaxis]
-    m = len(b) - 1
-    x = np.random.normal(0, 1, size=(n, m))
-    x_r = np.c_[np.ones(n), x]
-    y = np.dot(x_r, b) + np.random.normal(0, sigma, size=(n, 1))
-    return x, y
-
-
-class MultiOutputLinearRegressionModel:
-
-    def __init__(self, x: np.array, y: np.array, tickers: list = None):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         """
         Linear Regression with multiple y variables
 
@@ -178,40 +198,17 @@ class MultiOutputLinearRegressionModel:
         :param y: vector of dependent variables
         :param tickers: list of ticker names
         """
-        self.n = np.shape(y)[0]
-        self.n_y_s = np.shape(y)[1]
-        self.tickers = None
-        self.set_tickers(tickers=tickers)
 
-        if np.shape(x)[0] == self.n:
-            x = np.array(x).reshape(np.shape(x)[0], np.shape(x)[1])
-        elif np.shape(x)[1] == self.n:
-            x = np.array(x).reshape(np.shape(x)[1], np.shape(x)[0])
-        else:
-            print("X and y are not correct dimensions")
+        self.n_y2 = np.shape(self.y)[1]
 
+    def _reshape_y(self):
+        pass
 
-        # FIT SHOULD BE OUTSIDE INIT, MultiOutput should have a fit() method
-        x = np.insert(x, 0, 1, axis=1)
-        self.x = x
-        self.y = y
-        xtx_inv = np.linalg.inv(np.dot(self.x.T, self.x))
-        self.betas = np.linalg.multi_dot([xtx_inv, self.x.T, self.y])
+    def _set_tickers(self, tickers: List):
+        if (isinstance(tickers, list)) and (self.n_y2 == len(tickers)):
+            return np.array(tickers)
 
-    #
-    # def set_tickers(self, tickers: list):
-    #     """
-    #     sets the tickers
-    #
-    #     :param tickers: list of tickers
-    #     :return: none
-    #     """
-    #     if (isinstance(tickers, list)) and (self.n_y_s == len(tickers)):
-    #         self.tickers = tickers
-    #     elif tickers is None:
-    #         self.tickers = None
-
-    def plot_single(self, index: int, name: str = None) -> None:
+    def plot_single(self, name: str, tickers: List) -> None:
         """
         plots the summary of a single regression based on its column position
 
@@ -219,8 +216,9 @@ class MultiOutputLinearRegressionModel:
         :param name: possible name for the plot
         :return: none
         """
-        if name is None:
-            name = str(index)
+
+        tickers = self._set_tickers(tickers)
+        index = np.where(tickers==name)[0][0]
 
         betas = self.betas[:, index].T
         y = self.y[:, index].T
