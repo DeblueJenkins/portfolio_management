@@ -6,6 +6,7 @@ import os
 import pickle
 from models.linear_programming import LinearFactorModel
 from optimization.optimizer import Optimizer
+import numpy as np
 
 # data_path = r'C:\Users\HP\Documents\GitHub\portfolio_management\models\data'
 path_data = fr'{Path(__file__).parents[2]}\models\data'
@@ -19,21 +20,12 @@ get_constituents = False
 download = False
 
 eikon_api = Eikon(path_apikeys)
+portfolio = EquityPortfolio(config_path='config_example.yaml')
 
 
-if get_constituents:
-
-    rics_list = eikon_api.get_index_constituents()
-    with open(fr'{path_data}\rics_of_{index.replace(".","")}.pkl', 'wb') as f:
-        pickle.dump(rics_list, f)
-        print('Pickled.')
-
-else:
-    rics_list = pickle.load(open(fr'{path_data}\rics_of_{index.replace(".","")}.pkl', 'rb'))
-    print('Unpickled.')
 
 params = {
-    'rics': rics_list,
+    'rics': portfolio.assets,
     'field': ['TR.PriceClose', 'Price Close'],
     'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
     'load_path': os.path.join(path_data, 'csv')
@@ -54,7 +46,6 @@ data = eikon_api.load_timeseries(**params)
 
 ## ALL OF THE FOLLOWING SHOULD BE WRAPPED IN ONE CLASS CALLED EXECUTOR
 
-portfolio = EquityPortfolio(config_path='config_example.yaml')
 
 preprocessor = DataHandler(data=data, date_col=params['date_field'][1])
 returns = preprocessor.get_returns(period=15)
@@ -71,4 +62,5 @@ linear_model = LinearFactorModel(config_path='config_example.yaml', portfolio=po
 factors, factor_loadings = linear_model.fit()
 
 optimizer = Optimizer(config_path='config_example.yaml', factors=factors, factor_loadings=factor_loadings, portfolio=portfolio)
-optimizer.get_portfolio_return()
+weights = optimizer.find_optimal_weights()
+print(weights)

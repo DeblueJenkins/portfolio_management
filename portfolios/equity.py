@@ -26,6 +26,8 @@ class EquityPortfolio:
         self.n_assets = len(self.assets)
         self.weights_constraints = np.array([list(_.values())[0] for _ in self.config['ASSETS'].values()])
         self.weights = np.repeat(1/self.n_assets, self.n_assets)
+        self.allow_short_selling = self.config['CONSTRAINTS']['allow_short_selling']
+        self.allow_leverage = self.config['CONSTRAINTS']['allow_leverage']
 
 
 

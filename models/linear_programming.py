@@ -104,7 +104,7 @@ class LinearFactorModel(AbstractModel):
                                                                 method=self.config['MODEL']['regression_method'])
         self.multi_regressor.fit()
         self.factors = self.multi_regressor.x[0,:].copy() # this is the last factor in the time-series
-        self.factor_loadings = self.multi_regressor.beta[1:, :].copy()
+        self.factor_loadings = self.multi_regressor.beta.copy()
         if out:
             return self.factors.copy(), self.factor_loadings.copy()
 
