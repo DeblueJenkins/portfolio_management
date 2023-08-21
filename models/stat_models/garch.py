@@ -291,7 +291,7 @@ def get_ewma_variance(r: np.ndarray, l: float, tau: int):
 
 class EWMA:
 
-    def __init__(self, data: np.ndarray, tau: int):
+    def __init__(self, data: np.ndarray, tau: int, realized_variance: np.ndarray = None, realized_dates: np.ndarray = None):
         """
 
         :param data: np.array, first entry has to be the most recent observation
@@ -303,12 +303,20 @@ class EWMA:
         elif isinstance(data, pd.Series):
             self.data = data.values.astype(float)
             self.dates = data.index.values
+
+        self.realized_variance = realized_variance
+        self.realized_dates = realized_dates
+
         warnings.warn('Data must be sorted s.t. first entry is the most recent observation')
         self.tau = tau
         self.T = len(data)
 
-    def fit(self, out=False):
-        res = self._fit(self.data, self.tau)
+    def fit(self, out=False, objective=None):
+        if objective == 'rv':
+            objective = self.objective_realized_variance
+        else:
+            objective = self.objective
+        res = self._fit(self.data, self.tau, objective)
         self.l = res.x[0]
         if out:
             return res
@@ -336,23 +344,50 @@ class EWMA:
         if out:
             return self.conditional_mean, self.conditional_variance
 
+
+    def objective_realized_variance(self, l, data, tau):
+
+        T = len(data)
+        err = np.zeros(T-tau-1)
+        for t in np.arange(0, T-tau-1):
+
+            var = get_ewma_variance(data[t+1:t+tau+1], l, tau)
+            date_last = pd.Timestamp(self.dates[t+1]).date()
+            if date_last not in self.realized_dates:
+                continue
+            else:
+                real_var = self.realized_variance[np.argwhere(self.realized_dates == date_last)]
+                real_var = real_var[0][0]
+                r = data[t]
+                _sqr_error = np.sum((real_var - var) ** 2)
+                err[t] = _sqr_error
+
+        ssr = np.sum(err) / (T-tau)
+        rmse = np.sqrt(np.mean(err))
+        return rmse
+
+    @staticmethod
+    def objective(l, data, tau):
+        T = len(data)
+        rmse = np.zeros(T-tau-1)
+        for t in np.arange(0, T-tau-1):
+
+            mean = get_ewma_mean(data[t+1:t+tau+1], l, tau)
+            var = get_ewma_variance(data[t+1:t+tau+1], l, tau)
+            r = data[t]
+            _rmse = ((r - mean) ** 2 - var) ** 2
+            rmse[t] = _rmse
+
+
+        rmse = np.sum(rmse) / (T-tau)
+        return rmse
+
+
     @staticmethod
     # @jit(nopython=True)
-    def _fit(data, tau):
-        def objective(l, data, tau):
-            T = len(data)
-            rmse = np.zeros(T-tau-1)
-            for t in np.arange(0, T-tau-1):
-
-                mean = get_ewma_mean(data[t+1:t+tau+1], l, tau)
-                var = get_ewma_variance(data[t+1:t+tau+1], l, tau)
-                r = data[t]
-                _rmse = ((r - mean) ** 2 - var) ** 2
-                rmse[t] = _rmse
-
-
-            rmse = np.sum(rmse) / (T-tau)
-            return rmse
+    def _fit(data, tau, objective):
+        if objective is None:
+            objective = self.objective
 
         func = lambda x: objective(x, data, tau)
         res = minimize(fun=func, x0=0.8)
