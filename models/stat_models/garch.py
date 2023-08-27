@@ -421,6 +421,12 @@ class MultivariateEWMA:
 
 
 
+class IntradayVariance:
+    pass
+
+
+class IntradayCovariance:
+    pass
 
 
 

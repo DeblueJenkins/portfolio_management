@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
-
+from models.unsupervised.pca import PcaHandler, R2Pca
+import yaml
 class DataHandler:
 
     """
@@ -24,6 +25,7 @@ class DataHandler:
         self.data = self.data.astype(float)
         self.date_col = date_col
 
+
     def get_returns(self, period: int, out: bool = True):
             
         # to do: can be sped up with numpy only
@@ -43,5 +45,25 @@ class DataHandler:
         self.returns.dropna(axis=0, how='all', inplace=True)
         if out:
             return self.returns.copy()
+
+
+    def get_pca_factors(self, n_components: int, data: np.ndarray = None, method: str ='ordinary'):
+        if data is None:
+            if hasattr(self, 'returns'):
+                data = self.returns
+            else:
+                raise Exception('If data is not provided, get_returns() need to be run first!')
+
+        if method == 'ordinary':
+
+            self._pca_model = PcaHandler(data, demean=True)
+        elif method == 'r2pca':
+            pass
+        else:
+            raise Exception('method is not implemented yet')
+
+        factors = self._pca_model.components(n_components).copy()
+        return factors
+
 
 
