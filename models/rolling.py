@@ -104,7 +104,7 @@ class RollingModel:
                 # this should be outside, independent of this loop
                 if config['OLS']:
                     ols = LinearRegressionModel(X, y)
-                    params = ols.beta.flatten()
+                    params = ols.betas.flatten()
 
                     # these are errors with no data leakage, so e_{t}|OLS(PC_{t-n,t}), e_{t+1}|OLS(PC_{t-n,t+1}), etc.
                     errors_insample_last.append(ols.residuals[-1][0])

@@ -41,7 +41,7 @@ def test_lin_reg():
     x, y = generate_regression_data(betas=test_betas, sigma=sigma_test, n=500000)
     test_reg_model = LinearRegressionModel(x=x, y=y)
     for i in range(len(test_betas)):
-        assert pytest.approx(test_betas[i], rel=1e-2) == test_reg_model.beta[i]
+        assert pytest.approx(test_betas[i], rel=1e-2) == test_reg_model.betas[i]
     assert pytest.approx(sigma_test, rel=1e-2) == test_reg_model.sigma
 
 

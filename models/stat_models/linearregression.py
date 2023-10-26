@@ -6,6 +6,8 @@ from typing import List
 import warnings
 from dataclasses import dataclass, field
 from abc import ABC
+
+
 def generate_regression_data(betas: np.array, sigma: float, n: int = 100000):
     """
 
@@ -21,26 +23,29 @@ def generate_regression_data(betas: np.array, sigma: float, n: int = 100000):
     y = np.dot(x_r, b) + np.random.normal(0, sigma, size=(n, 1))
     return x, y
 
+
 @dataclass
 class Model(ABC):
-    x : np.ndarray
-    y : np.ndarray
+    x: np.ndarray
+    y: np.ndarray
     add_intercept: bool = True
     method: str = 'ols'
     conf: float = 0.95
 
     def __post_init__(self):
-            if self.add_intercept:
-                self.x = np.insert(self.x, 0, 1, axis=1)
-            self.n_y1 = len(self.y)
-            self.n_x1, self.n_x2 = np.shape(self.x)
 
-            if self.n_x1 == self.n_y1:
-                self.x = np.array(self.x).reshape(self.n_x1, self.n_x2)
-            elif self.n_x2 == self.n_y1:
-                self.x = np.array(self.x).reshape(self.n_x2, self.n_x1)
-            else:
-                raise Exception("X and y are not correct dimensions")
+        if self.add_intercept:
+            self.x = np.insert(self.x, 0, 1, axis=1)
+        self.n_y1 = len(self.y)
+        self.n_x1, self.n_x2 = np.shape(self.x)
+
+        if self.n_x1 == self.n_y1:
+            self.x = np.array(self.x).reshape(self.n_x1, self.n_x2)
+        elif self.n_x2 == self.n_y1:
+            self.x = np.array(self.x).reshape(self.n_x2, self.n_x1)
+        else:
+            raise Exception("X and y are not correct dimensions")
+
 
 class LinearRegressionModel(Model):
 
@@ -62,6 +67,8 @@ class LinearRegressionModel(Model):
         self.df_res = self.n_y1 - self.p
         self.df_total = self.n_y1 - 1
         self._reshape_y()
+        self.residuals = np.array([])
+        self.betas = np.array([])
 
         ## TO DO:
         # self.betas, self.residuals, self.mse should be setter/getters
@@ -70,11 +77,12 @@ class LinearRegressionModel(Model):
         self.y = self.y.reshape(self.n_y1, 1)
 
     def get_errors(self) -> None:
-        self.residuals = np.dot(self.x, self.beta) - self.y
+        self.residuals = np.dot(self.x, self.betas) - self.y
+
     def get_sigma(self):
         if len(self.residuals) == 0:
             self.get_errors()
-        return np.sqrt(np.dot(self.residuals.T, self.residuals)/(len(self.y) - len(self.beta) + 1))
+        return np.sqrt(np.dot(self.residuals.T, self.residuals) / (len(self.y) - len(self.betas) + 1))
 
     def fit(self, out: bool = False) -> np.ndarray:
         """
@@ -84,34 +92,33 @@ class LinearRegressionModel(Model):
         """
         xTx = self.x.T.dot(self.W).dot(self.x)
         reg_mat = xTx + self.l1 * np.ones(len(xTx))
-        self.beta = np.linalg.multi_dot([np.linalg.inv(reg_mat), self.x.T, self.W, self.y])
+        self.betas = np.linalg.multi_dot([np.linalg.inv(reg_mat), self.x.T, self.W, self.y])
         if out:
-            return self.beta
+            return self.betas
 
-    def predict(self, X):
+    def predict(self, x):
         if self.add_intercept:
-            if X.ndim == 1:
-                X = np.insert(X, 0, 1)
-            elif X.ndim == 2:
-                X = np.insert(X, 0, 1, axis=1)
-        return self.beta.T.dot(X)
+            if x.ndim == 1:
+                x = np.insert(x, 0, 1)
+            elif x.ndim == 2:
+                x = np.insert(x, 0, 1, axis=1)
+        return self.betas.T.dot(x)
 
-    def diagnostics(self):
+    def diagnostics(self, out=False):
         self.get_errors()
         self.get_sigma()
-        mse = self.compute_mse()
-        r2 = self.get_r_square()
-        r2_adj = self.get_r_square_adj()
-        return {'mse': mse, 'r2': r2, 'r2_adj': r2_adj}
+        self.mse = self.compute_mse()
+        self.r2, self.r2_adj = self.get_r_square()
+        if out:
+            return {'mse': self.mse, 'r2': self.r2, 'r2_adj': self.r2_adj}
+
     def compute_mse(self) -> float:
         """
         computes the MSE based on a beta vector (can be used to compare regularised vs non-regularised estimators)
-
-        :param beta: vector of parameters
         :return: mse
         """
-        epsilon = np.dot(self.x, self.beta) - self.y
-        return float(np.dot(epsilon.T, epsilon) / self.n_y1)
+        return (self.residuals ** 2).mean()
+
     def compute_standard_errors(self, how: str = 'ols') -> np.ndarray:
         """
         computes the standard errors
@@ -119,18 +126,19 @@ class LinearRegressionModel(Model):
         :return: np.array of standard errors per beta parameter
         """
         if how == 'ols':
-            std_err = np.ones(shape=(np.shape(self.beta)))
+            std_err = np.ones(shape=(np.shape(self.betas)))
             xtx_inv = np.linalg.inv(self.xTx)
-            for i in range(len(self.beta)):
+            for i in range(len(self.betas)):
                 std_err[i] = self.sigma * np.sqrt(xtx_inv[i][i])
         elif how == 'ridge':
             # Do not know whether this works for ridged regression
             warnings.warn('Did not calculate errors for ridge regression')
-            std_err = np.repeat(np.nan, len(self.beta))
+            std_err = np.repeat(np.nan, len(self.betas))
         else:
             raise Exception(f'{how} method not implemented')
 
         return std_err
+
     def perform_t_tests(self, method: str = 'ols') -> pd.DataFrame:
         """
         performs the t-tests for each parameter
@@ -139,9 +147,9 @@ class LinearRegressionModel(Model):
         """
         if method == 'ols':
             std_err = self.compute_standard_errors()
-            df = len(self.y) - len(self.beta) + 1
-            top_quantile = self.beta + t.ppf(1-self.conf/2, df=df) * std_err
-            bot_quantile = self.beta + t.ppf(self.conf/2, df=df) * std_err
+            df = len(self.y) - len(self.betas) + 1
+            top_quantile = self.betas + t.ppf(1 - self.conf / 2, df=df) * std_err
+            bot_quantile = self.betas + t.ppf(self.conf / 2, df=df) * std_err
             checks = []
             for a, b in zip(bot_quantile, top_quantile):
                 if a <= 0 <= b:
@@ -154,27 +162,30 @@ class LinearRegressionModel(Model):
                                  "Results": checks})
         else:
             raise Exception(f'{method} t-tests not implemented')
+
     def get_r_square(self) -> float:
         """
         coefficient of determination % explained variance in sample
         :return: float
         """
-        ss_res = np.dot(self.residuals.T, self.residuals)
-        ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
-        return float(1 - ss_res/ss_tot)
-    def get_r_square_adj(self) -> float:
+        # ss_res = np.dot(self.residuals.T, self.residuals)
+        ss_res = (self.residuals ** 2).sum()
+        # ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
+        ss_tot = ((self.y - np.mean(self.y)) ** 2).sum()
 
-        ss_res = np.dot(self.residuals.T, self.residuals)
-        ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
-        return float(1 - (ss_res/self.df_res) / (ss_tot/self.df_total))
+        r2 = 1 - ss_res/ss_tot
+        r2_adj = 1 - (ss_res/self.df_res) / (ss_tot/self.df_total)
+        return r2, r2_adj
+
+
     def plot(self) -> None:
         """
         plots the real values vs the predictions
 
         :return: none
         """
-        predictions = np.dot(self.x, self.beta)
-        r2 = round(self.r_square(), 5)
+        predictions = np.dot(self.x, self.betas)
+        r2, r2_adj = self.get_r_square()
         fig, ax1 = plt.subplots(1, 1, figsize=(8, 6))
         ax1.scatter(self.y, predictions, label='scatter', color="black", linewidth=2)
         ax1.tick_params(labelrotation=45)
@@ -218,7 +229,7 @@ class MultiOutputLinearRegressionModel(LinearRegressionModel):
         """
 
         tickers = self._set_tickers(tickers)
-        index = np.where(tickers==name)[0][0]
+        index = np.where(tickers == name)[0][0]
 
         betas = self.betas[:, index].T
         y = self.y[:, index].T

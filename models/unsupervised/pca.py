@@ -80,24 +80,46 @@ class PcaBaseClass(ABC):
 
 class PcaHandler(PcaBaseClass):
 
-    def __init__(self, data, demean: bool = True):
+    def __init__(self, X, demean: bool = True, method : str = 'svd', covariance: str = 'mle'):
         """
         Principle Component Object
         :param data: matrix of data (free of type can be a data frame or numpy array)
         :param demean: boolean variable True demeans the data, when false it will not
 
         """
-        self.cov_data = np.array([])
+        if method == 'svd':
+            if X.shape[0] == X.shape[1]:
+                raise Exception('When method is svd, please provide rectangular matrix (data)')
+        elif method == 'pca':
+            if X.shape[0] != X.shape[1]:
+                raise Exception('When method is pca, please provide square matrix (covariance)')
+            if np.sum(X != X.T):
+                raise Exception('Covariance matrix must be symmetric')
+        else:
+            raise Exception('Method must be either svd (on data) or pca (on covariance matrix)')
+
+        super().__init__(data=X, demean=demean)
+        self.method = method
+        if self.method == 'svd':
+            self.cov_data = np.cov(self.x.T)
+        else:
+            if covariance == 'mle':
+                self.cov_data = np.cov(self.raw_data.T)
+            else:
+                raise Exception('only mle covariance is supported')
         self.cov_pca = np.array([])
-        super().__init__(data=data, demean=demean)
-        self._get_svd()
+        if method == 'svd':
+            self._get_svd()
+        elif method == 'pca':
+            self._get_pca()
+
+    def _get_pca(self):
+        _, s, v = np.linalg.svd(self.raw_data)
+        self.eig_vals = s
+        self.eig_vecs = v.T
 
     def _get_svd(self) -> None:
         self.singular_values, self.eig_vals, self.eig_vecs = self.get_svd(self.x)
-
-    def set_benchmark_comp(self) -> None:
-        self.cov_data = np.cov(self.x, rowvar=False)
-        self.cov_pca = np.linalg.multi_dot([self.eig_vecs, np.diag(self.eig_vals), self.eig_vecs.T])
 
     def benchmark_test(self) -> None:
 
@@ -105,16 +127,21 @@ class PcaHandler(PcaBaseClass):
         Compares the PCA covariance to the empirical covariance.
 
         """
-        self.set_benchmark_comp()
+        self.cov_pca = np.linalg.multi_dot([self.eig_vecs, np.diag(self.eig_vals), self.eig_vecs.T])
         print(sum(self.cov_pca - self.cov_data))
 
-    def components(self, n: int) -> np.array:
+    def components(self, n: int, data: np.ndarray = None) -> np.array:
         """
         Computes principle components
 
         :param n: number of factors
         :return: n pca vectors factor
         """
+        if self.method == 'pca':
+            if data is None:
+                raise Exception('Data matrix must be provided when method is svd')
+
+
         return np.dot(self.x, self.eig_vecs[:, :n])
 
     def plot(self, n: int) -> None:

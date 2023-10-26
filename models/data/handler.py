@@ -62,8 +62,9 @@ class DataHandler:
         else:
             raise Exception('method is not implemented yet')
 
-        factors = self._pca_model.components(n_components).copy()
-        return factors
+        self.factors = self._pca_model.components(n_components).copy()
+        self.factor_loading_estimator = np.multiply(self._pca_model.eig_vals, self._pca_model.eig_vecs)
+        return self.factors, self._pca_model.eig_vals[:n_components]
 
 
 

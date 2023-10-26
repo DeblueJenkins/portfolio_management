@@ -1,7 +1,7 @@
 from typing import Dict
 import yaml
 import numpy as np
-
+import pandas as pd
 
 
 class EquityPortfolio:
@@ -28,6 +28,10 @@ class EquityPortfolio:
         self.weights = np.repeat(1/self.n_assets, self.n_assets)
         self.allow_short_selling = self.config['CONSTRAINTS']['allow_short_selling']
         self.allow_leverage = self.config['CONSTRAINTS']['allow_leverage']
+        self.returns = pd.DataFrame({})
+
+    def set_returns(self, returns: pd.DataFrame):
+        self.returns = returns
 
 
 
