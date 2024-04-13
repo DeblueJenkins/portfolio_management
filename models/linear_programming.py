@@ -34,8 +34,8 @@ class LinearFactorModel(AbstractModel):
     def fit(self, y, X, out: bool = True):
 
         self.multi_regressor = MultiOutputLinearRegressionModel(x=X,
-                                                                    y=y,
-                                                                    method=self.config['MODEL']['regression_method'])
+                                                                y=y,
+                                                                method=self.config['MODEL']['regression_method'])
         self.multi_regressor.fit()
         self.multi_regressor.get_errors()
         self.multi_regressor.diagnostics()
@@ -69,7 +69,7 @@ class LinearFactorModel(AbstractModel):
         b = self.factor_loadings[1:].dot(w)
         return b.T.dot(self.factor_var_covar).dot(b)[0][0]
 
-    def get_portfolio_total_variance(self, weights):
+    def get_portfolio_total_variance(self, weights: np.ndarray):
 
         # track this in optimization
         sigma_e = self.get_residual_var_covar(weights)

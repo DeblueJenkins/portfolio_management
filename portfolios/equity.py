@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 import yaml
 import numpy as np
 import pandas as pd
@@ -22,13 +22,13 @@ class EquityPortfolio:
         with open(config_path, 'rb') as f:
             self.config = yaml.safe_load(f)
 
-        self.assets = list(self.config['ASSETS'].keys())
-        self.n_assets = len(self.assets)
-        self.weights_constraints = np.array([list(_.values())[0] for _ in self.config['ASSETS'].values()])
-        self.weights = np.repeat(1/self.n_assets, self.n_assets)
-        self.allow_short_selling = self.config['CONSTRAINTS']['allow_short_selling']
-        self.allow_leverage = self.config['CONSTRAINTS']['allow_leverage']
-        self.returns = pd.DataFrame({})
+        self.assets: List[str] = list(self.config['ASSETS'].keys())
+        self.n_assets: int = len(self.assets)
+        self.weights_constraints: np.ndarray = np.array([list(_.values())[0] for _ in self.config['ASSETS'].values()])
+        self.weights: np.ndarray = np.repeat(1/self.n_assets, self.n_assets)
+        self.allow_short_selling: bool = self.config['CONSTRAINTS']['allow_short_selling']
+        self.allow_leverage: bool = self.config['CONSTRAINTS']['allow_leverage']
+        self.returns: pd.DataFrame = pd.DataFrame({})
 
     def set_returns(self, returns: pd.DataFrame):
         self.returns = returns

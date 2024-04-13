@@ -85,7 +85,7 @@ optimizer = Optimizer(config_path='config_example.yaml',
                       model=linear_model,
                       portfolio=portfolio,
                       mean_function=linear_model.get_portfolio_factor_return,
-                      var_function=linear_model.get_portfolio_factor_variance)
+                      var_function=linear_model.get_portfolio_total_variance)
 
 weights = optimizer.find_optimal_weights()
 print(weights)
