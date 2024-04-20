@@ -1,6 +1,7 @@
 from portfolios.equity import EquityPortfolio
 from models.data.source import Eikon
 from models.data.handler import DataHandler
+from backtesting import PerformanceAssesser
 from pathlib import Path
 import os
 import pickle
@@ -11,6 +12,9 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import scipy.stats as stats
+
+START_DATE = '1999-12-31'
+END_DATE = '2023-06-04'
 
 ## ALL OF THE FOLLOWING SHOULD BE WRAPPED IN ONE CLASS CALLED EXECUTOR
 
@@ -29,27 +33,45 @@ params = {
     'load_path': os.path.join(path_data, 'csv')
 }
 
+# params = {
+#     'rics': portfolio.assets,
+#     'field': ['TR.PriceClose', 'Price Close'],
+#     'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
+#     'params': {
+#         'SDate': START_DATE,
+#         'EDate': END_DATE,
+#         'Curn':'Native',
+#     },
+#     'save_config': {'save': True, 'path': os.path.join(path_data, 'csv')}
+# }
 
 eikon_api = Eikon(path_apikeys)
 data = eikon_api.load_timeseries(**params)
+# data = eikon_api.download_timeseries(**params)
 
 preprocessor = DataHandler(data=data,
                            date_col=params['date_field'][1])
 
-returns = preprocessor.get_returns(period=15)
+returns = preprocessor.get_returns(period=14)
 
 portfolio.set_returns(returns)
 
 # for now just drop, otherwise we should interpolate or impute or deal with it somehow
+before_drop = returns.columns
 returns.dropna(inplace=True, axis=1)
+after_drop = returns.columns
+remove_from_portfolio = list(set(before_drop).difference(set(after_drop)))
 
-# n_comps should come from config
+
+
 # n_comps should be a hyperparam
-factors, eigen_values = preprocessor.get_pca_factors(n_components=15,
+n_comps = portfolio.config['MODEL']['main_factors']['PCA']
+factors, eigen_values = preprocessor.get_pca_factors(n_components=n_comps,
                                        data=returns,
                                        method='ordinary')
 
 
+# since this takes portfolio, it can have the returns and factors in self
 linear_model = LinearFactorModel(config_path='config_example.yaml',
                                  portfolio=portfolio)
 
@@ -62,12 +84,12 @@ linear_model.set_factor_var_covar(eigen_values)
 # plt.show()
 
 
-equal_portfolio_returns = returns.to_numpy().dot(portfolio.weights)
-equal_mean_return = np.mean(equal_portfolio_returns)
-equal_total_variance = np.var(equal_portfolio_returns)
-
-sample_mean = lambda weights: np.mean(returns.to_numpy().dot(weights))
-sample_variance = lambda weights: np.var(returns.to_numpy().dot(weights))
+# equal_portfolio_returns = returns.to_numpy().dot(portfolio.weights)
+# equal_mean_return = np.mean(equal_portfolio_returns)
+# equal_total_variance = np.var(equal_portfolio_returns)
+#
+# sample_mean = lambda weights: np.mean(returns.to_numpy().dot(weights))
+# sample_variance = lambda weights: np.var(returns.to_numpy().dot(weights))
 
 linear_model.get_portfolio_total_variance(portfolio.weights)
 linear_model.get_portfolio_factor_return(portfolio.weights)
@@ -77,10 +99,13 @@ r2 = linear_model.multi_regressor.r2
 r2_adj = linear_model.multi_regressor.r2_adj
 
 
-r2.plot.bar(figsize=(11,8))
-r2_adj.plot.bar(figsize=(11,8))
-plt.show()
+# r2.plot.bar(figsize=(11,8))
+# r2_adj.plot.bar(figsize=(11,8))
+# plt.show()
 
+# if model goes inside, the functions are not needed to be input
+# also, model.factors and model.factor_loadings are not needed, only size is needed
+# which can be extracted from portfolio
 optimizer = Optimizer(config_path='config_example.yaml',
                       model=linear_model,
                       portfolio=portfolio,
@@ -89,3 +114,7 @@ optimizer = Optimizer(config_path='config_example.yaml',
 
 weights = optimizer.find_optimal_weights()
 print(weights)
+
+# tester = PerformanceAssesser(START_DATE, END_DATE, weights)
+# tester.get_historical_returns(returns)
+# tester.get_benchmark_index_returns(eikon_api, '.SP500', 'TR.PriceClose', 'TR.PriceClose.calcdate')

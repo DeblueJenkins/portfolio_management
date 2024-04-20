@@ -23,6 +23,7 @@ class EquityPortfolio:
             self.config = yaml.safe_load(f)
 
         self.assets: List[str] = list(self.config['ASSETS'].keys())
+        self.horizon = self.config['HORIZON']
         self.n_assets: int = len(self.assets)
         self.weights_constraints: np.ndarray = np.array([list(_.values())[0] for _ in self.config['ASSETS'].values()])
         self.weights: np.ndarray = np.repeat(1/self.n_assets, self.n_assets)
@@ -33,6 +34,8 @@ class EquityPortfolio:
     def set_returns(self, returns: pd.DataFrame):
         self.returns = returns
 
+    def set_factors(self, factors):
+        self.factors = factors
 
 
 

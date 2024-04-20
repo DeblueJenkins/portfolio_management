@@ -97,7 +97,7 @@ class Eikon:
 
     def download_timeseries(self, rics: list, field: list = ['TR.PriceClose', 'Price Close'],
                             date_field: list = ['TR.PriceClose.calcdate', 'Calc Date'], params: dict = None,
-                            save_config: dict = {'save': True, 'path': r'C:\Users\serge\IdeaProjects\portfolio_manager\portfolio_management\models\data\csv' },
+                            save_config: dict = {'save': True, 'path': r'C:\Users\serge\IdeaProjects\portfolio_management\models\data\csv' },
                             out: bool = True):
 
         ## There should be a class attribute name mapper between TR.fields and their corresponding column names
@@ -151,10 +151,11 @@ class Eikon:
                             else:
                                 df = df.rename(columns={field[1]: ric})
                                 df = df[[ric, date_field[1]]]
-                                df_all = pd.merge(df_all, df, on=date_field[1])
+                                df_all = pd.merge(df_all, df, on=date_field[1], how='left')
                         except Exception as e:
                             print(f'Exception for {ric}: {repr(e)}')
 
+                        print(df_all.count())
                         self.data = df_all
 
             else:

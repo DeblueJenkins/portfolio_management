@@ -21,6 +21,14 @@ class AbstractModel(ABC):
     def fit(self):
         pass
 
+    @abstractmethod
+    def get_portfolio_factor_return(self, weights):
+        pass
+
+    @abstractmethod
+    def get_portfolio_factor_variance(self, weights):
+        pass
+
 class LinearFactorModel(AbstractModel):
     '# this does one-step estimation'
     def __init__(self, portfolio: EquityPortfolio, *args, **kwargs):
@@ -31,7 +39,12 @@ class LinearFactorModel(AbstractModel):
 
 
 
-    def fit(self, y, X, out: bool = True):
+    def fit(self, y = None, X = None, out: bool = True):
+
+        if X is None:
+            X = self.portfolio.factors
+        if y is None:
+            y = self.portfolio.returns
 
         self.multi_regressor = MultiOutputLinearRegressionModel(x=X,
                                                                 y=y,

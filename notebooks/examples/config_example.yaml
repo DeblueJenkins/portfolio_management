@@ -1,158 +1,153 @@
+HORIZON:
+  14
 ASSETS:
   MAA.N:
-    constr: 0.035
+    constr: 0.07
   ESS.N:
-    constr: 0.035
+    constr: 0.07
   JBHT.OQ:
-    constr: 0.035
+    constr: 0.07
   DOV.N:
-    constr: 0.035
+    constr: 0.07
   VFC.N:
-    constr: 0.035
-  PPL.N:
-    constr: 0.035
+    constr: 0.07
   CMCSA.OQ:
-    constr: 0.035
+    constr: 0.07
   PGR.N:
-    constr: 0.035
+    constr: 0.07
   CMA.N:
-    constr: 0.035
+    constr: 0.07
   MCD.N:
-    constr: 0.035
+    constr: 0.07
   APA.OQ:
-    constr: 0.035
+    constr: 0.07
   PPG.N:
-    constr: 0.035
+    constr: 0.07
   MS.N:
-    constr: 0.035
+    constr: 0.07
   ITW.N:
-    constr: 0.035
+    constr: 0.07
   FICO.N:
-    constr: 0.035
+    constr: 0.07
   FAST.OQ:
-    constr: 0.035
+    constr: 0.07
   UPS.N:
-    constr: 0.035
+    constr: 0.07
   HUM.N:
-    constr: 0.035
+    constr: 0.07
   XRAY.OQ:
-    constr: 0.035
+    constr: 0.07
   CPT.N:
-    constr: 0.035
+    constr: 0.07
   CPB.N:
-    constr: 0.035
+    constr: 0.07
   TJX.N:
-    constr: 0.035
+    constr: 0.07
   BAX.N:
-    constr: 0.035
+    constr: 0.07
   CAG.N:
-    constr: 0.035
+    constr: 0.07
   WEC.N:
-    constr: 0.035
+    constr: 0.07
   NTAP.OQ:
-    constr: 0.035
+    constr: 0.07
   MAA.N:
-    constr: 0.035
+    constr: 0.07
   MRO.N:
-    constr: 0.035
+    constr: 0.07
   CHRW.OQ:
-    constr: 0.035
+    constr: 0.07
   SPG.N:
-    constr: 0.035
+    constr: 0.07
   MTB.N:
-    constr: 0.035
+    constr: 0.07
   ADI.OQ:
-    constr: 0.035
+    constr: 0.07
   BLK.N:
-    constr: 0.035
+    constr: 0.07
   COP.N:
-    constr: 0.035
+    constr: 0.07
   BEN.N:
-    constr: 0.035
+    constr: 0.07
   DOV.N:
-    constr: 0.035
+    constr: 0.07
   HWM.N:
-    constr: 0.035
+    constr: 0.07
   NTRS.OQ:
-    constr: 0.035
+    constr: 0.07
   ETN.N:
-    constr: 0.035
+    constr: 0.07
   CLX.N:
-    constr: 0.035
+    constr: 0.07
   MSI.N:
-    constr: 0.035
+    constr: 0.07
   MO.N:
-    constr: 0.035
+    constr: 0.07
   CI.N:
-    constr: 0.035
+    constr: 0.07
   DRI.N:
-    constr: 0.035
+    constr: 0.07
   UPS.N:
-    constr: 0.035
+    constr: 0.07
   PHM.N:
-    constr: 0.035
+    constr: 0.07
   JKHY.OQ:
-    constr: 0.035
+    constr: 0.07
   GILD.OQ:
-    constr: 0.035
+    constr: 0.07
   TFX.N:
-    constr: 0.035
+    constr: 0.07
   AON.N:
-    constr: 0.035
+    constr: 0.07
   SNA.N:
-    constr: 0.035
+    constr: 0.07
   NVR.N:
-    constr: 0.035
+    constr: 0.07
   TXT.N:
-    constr: 0.035
+    constr: 0.07
   EMR.N:
-    constr: 0.035
+    constr: 0.07
   ADSK.OQ:
-    constr: 0.035
+    constr: 0.07
   PTC.OQ:
-    constr: 0.035
+    constr: 0.07
   WMT.N:
-    constr: 0.035
+    constr: 0.07
   WEC.N:
-    constr: 0.035
+    constr: 0.07
   MKC.N:
-    constr: 0.035
+    constr: 0.07
   CMS.N:
-    constr: 0.035
+    constr: 0.07
   ARE.N:
-    constr: 0.035
+    constr: 0.07
   ABT.N:
-    constr: 0.035
+    constr: 0.07
   K.N:
-    constr: 0.035
+    constr: 0.07
   MKC.N:
-    constr: 0.035
+    constr: 0.07
   MCD.N:
-    constr: 0.035
+    constr: 0.07
   DE.N:
-    constr: 0.035
-  BIIB.OQ:
-    constr: 0.035
+    constr: 0.07
   HSIC.OQ:
-    constr: 0.035
+    constr: 0.07
   KLAC.OQ:
-    constr: 0.035
+    constr: 0.07
   AMAT.OQ:
-    constr: 0.035
-  UNP.N:
-    constr: 0.035
+    constr: 0.07
   NEM.N:
-    constr: 0.035
-  EA.OQ:
-    constr: 0.035
+    constr: 0.07
   RE.N:
-    constr: 0.035
+    constr: 0.07
 MODEL:
   hybrid: False
   main_factors:
-    PCA: 5
+    PCA: 12
   secondary_factors: []
   regression_method: ols
+  pca_method: ordinary
 
 CONSTRAINTS:
   allow_short_selling: True
