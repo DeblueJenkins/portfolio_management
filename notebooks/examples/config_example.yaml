@@ -1,5 +1,5 @@
 HORIZON:
-  14
+  30
 ASSETS:
   MAA.N:
     constr: 0.07
@@ -148,6 +148,8 @@ MODEL:
   secondary_factors: []
   regression_method: ols
   pca_method: ordinary
+  opt_function: sortino
+  reg_lambda: 10
 
 CONSTRAINTS:
   allow_short_selling: True

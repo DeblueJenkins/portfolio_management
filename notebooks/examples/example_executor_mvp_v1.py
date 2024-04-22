@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 
 START_DATE = '1999-12-31'
-END_DATE = '2023-06-04'
+END_DATE = '2024-04-21'
 
 ## ALL OF THE FOLLOWING SHOULD BE WRAPPED IN ONE CLASS CALLED EXECUTOR
 
@@ -26,28 +26,28 @@ path_apikeys = r'C:\Users\serge\OneDrive\reuters\apikeys.csv'
 eikon_api = Eikon(path_apikeys)
 portfolio = EquityPortfolio(config_path='config_example.yaml')
 
-params = {
-    'rics': portfolio.assets,
-    'field': ['TR.PriceClose', 'Price Close'],
-    'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
-    'load_path': os.path.join(path_data, 'csv')
-}
-
 # params = {
 #     'rics': portfolio.assets,
 #     'field': ['TR.PriceClose', 'Price Close'],
 #     'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
-#     'params': {
-#         'SDate': START_DATE,
-#         'EDate': END_DATE,
-#         'Curn':'Native',
-#     },
-#     'save_config': {'save': True, 'path': os.path.join(path_data, 'csv')}
+#     'load_path': os.path.join(path_data, 'csv')
 # }
 
+params = {
+    'rics': portfolio.assets,
+    'field': ['TR.PriceClose', 'Price Close'],
+    'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
+    'params': {
+        'SDate': START_DATE,
+        'EDate': END_DATE,
+        'Curn':'Native',
+    },
+    'save_config': {'save': True, 'path': os.path.join(path_data, 'csv')}
+}
+
 eikon_api = Eikon(path_apikeys)
-data = eikon_api.load_timeseries(**params)
-# data = eikon_api.download_timeseries(**params)
+# data = eikon_api.load_timeseries(**params)
+data = eikon_api.download_timeseries(**params)
 
 preprocessor = DataHandler(data=data,
                            date_col=params['date_field'][1])
@@ -76,7 +76,7 @@ linear_model = LinearFactorModel(config_path='config_example.yaml',
                                  portfolio=portfolio)
 
 linear_model.fit(X=factors, y=returns)
-linear_model.set_factor_var_covar(eigen_values)
+linear_model.set_factor_var_cov(eigen_values)
 
 # this should be a ModelSelector class
 # trials = linear_model.tune_hyperparams()

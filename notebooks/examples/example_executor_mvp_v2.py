@@ -1,5 +1,5 @@
 from portfolios.equity import EquityPortfolio
-from models.data.source import Eikon
+from models.data.source import Eikon, load_fed_rates_from_excel
 from models.data.handler import DataHandler
 from pathlib import Path
 import os
@@ -7,6 +7,8 @@ from models.linear_programming import LinearFactorModel
 from optimization.optimizer import Optimizer
 import pandas as pd
 import matplotlib.pyplot as plt
+from backtesting import PerformanceAssesser
+import datetime as dt
 
 class Executor:
 
@@ -34,12 +36,18 @@ class Executor:
         self.data = self.api.load_timeseries(**self.params)
         self.data = self.data[(self.data['Calc Date'] > self.start_date) & (self.data['Calc Date'] < self.end_date)]
 
+        self.rf = load_fed_rates_from_excel(fr"{PATH_DATA}\fed_rates\FEDRates21042024.csv")
+
     def _preprocess(self):
 
         preprocessor = DataHandler(data=self.data,
+                                   data_rates=self.rf,
+                                   horizon=self.portfolio.horizon,
                                    date_col=self.params['date_field'][1])
 
-        self.returns = preprocessor.get_returns(period=self.portfolio.horizon)
+        self.returns = preprocessor.get_excess_returns(period=self.portfolio.horizon)
+
+        self.returns.dropna(inplace=True, axis=0)
         self.returns.dropna(inplace=True, axis=1)
 
         self.n_pca_components = self.portfolio.config['MODEL']['main_factors']['PCA']
@@ -59,7 +67,9 @@ class Executor:
                                          portfolio=self.portfolio)
 
         self.linear_model.fit()
-        self.linear_model.set_factor_var_covar(self.eigen_values)
+        self.linear_model.set_factor_var_cov(self.eigen_values)
+        self.linear_model.get_factor_mean()
+        self.linear_model.get_residual_var_cov()
 
     def run_optimization(self):
 
@@ -73,24 +83,52 @@ class Executor:
 
         weights = optimizer.find_optimal_weights()
 
-        return pd.Series(index=self.portfolio.assets, data=weights)
+        return weights
+
 
 
 if __name__ == '__main__':
 
     START_DATE = '1999-12-31'
-    END_DATE = '2023-06-04'
+    # this is included for data, but there is no leakage
+    END_DATE = START_DATE_TEST = '2023-06-04'
+    END_DATE_TEST = '2023-07-20'
+
     PATH_DATA = fr'{Path(__file__).parents[2]}\models\data'
     PATH_API_KEYS = r'C:\Users\serge\OneDrive\reuters\apikeys.csv'
+    PATH_SAVE_PLOTS = os.path.join(r'results\figures')
 
-    executor = Executor(START_DATE, END_DATE, PATH_DATA, PATH_API_KEYS)
 
-    weights = executor.run_optimization()
+    store_results = {}
 
-    weights.plot.hist()
-    plt.show()
+    while END_DATE < '2024-04-21':
 
-    print(f"Max weight: {max(weights)}")
-    print(f"Min weight: {min(weights)}")
+        print(END_DATE)
 
-    print(f"Top 5 weights: {weights[-5]}")
+        store_ = {}
+
+        executor = Executor(START_DATE, END_DATE, PATH_DATA, PATH_API_KEYS)
+
+        horizon = executor.portfolio.horizon
+
+        weights, res = executor.run_optimization()
+
+
+
+        tester = PerformanceAssesser(START_DATE_TEST, END_DATE_TEST, PATH_DATA, PATH_API_KEYS)
+        portfolio_summary = tester.set_portfolio(weights)
+        tester.plot(path_save=fr"{PATH_SAVE_PLOTS}\{END_DATE}")
+
+        store_['portfolio_summary'] = portfolio_summary
+        store_['weights'] = weights
+
+        store_results[END_DATE] = store_
+
+        END_DATE = str((dt.datetime.strptime(END_DATE, '%Y-%m-%d') + dt.timedelta(days=horizon)).date())
+        END_DATE_TEST = str((dt.datetime.strptime(END_DATE_TEST, '%Y-%m-%d') + dt.timedelta(days=horizon)).date())
+
+    table_metrics = pd.DataFrame({k: v['portfolio_summary'] for k,v in store_results.items()})
+    table_weights = pd.DataFrame({k: v['weights'] for k,v in store_results.items()})
+
+    table_metrics.to_csv(fr"{os.path.join('results')}\metrics.csv")
+    table_weights.to_csv(fr"{os.path.join('results')}\weights.csv")

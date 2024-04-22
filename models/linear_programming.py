@@ -62,32 +62,90 @@ class LinearFactorModel(AbstractModel):
         if out:
             return self.factors.copy(), self.factor_loadings.copy()
 
+    def get_semi_variance(self, weights):
+        """
+            X = a + bF + e
+            E[X] = a + bF
+
+            a+bF+e - a + bF
+
+            E(2bF + e)**2
+            E[2bF**2 + 4bFe + e**2]
+
+            2bF**2 + 0 + 1
+
+            ((2bF + 1)* 1[if X < a+bF]) ** 0.5
+        """
+        mean = self.get_portfolio_factor_return(weights)
+        indicators = (self.get_factor_mean(True) < mean).astype(int)
+        semi_variance = (2 * self.factor_loadings.T.dot(self.factors) + np.ones(len(indicators))) * indicators
+        return semi_variance
+
+    def get_factor_mean(self, out=False):
+
+        self.factor_mean = self.factor_loadings.T.dot(self.factors)
+        if out:
+            return self.factor_mean
+
+    def get_residual_var_cov(self, out=False):
+
+        self.residual_var_cov = np.cov(self.multi_regressor.residuals, rowvar=False)
+        if out:
+            return self.residual_var_cov
+
+    def set_factor_var_cov(self, eigen_values):
+
+        self.eig_vals = eigen_values
+        # factors are independent in this case and the var-cov matrix is diagonal
+        # with eigenvalues
+        self.factor_var_cov = np.diag(eigen_values)
+
+    def get_factor_var_cov(self):
+        if hasattr(self, self.factor_var_cov):
+            return self.factor_var_cov
+        else:
+            raise Exception('Factor covariance matrix not set')
+
+    def get_portfolio_semi_variance(self, weights):
+
+        ind = (self.factor_mean < self.get_portfolio_factor_return(weights)).astype(int)
+        weights = weights * ind
+        w = weights.reshape(len(weights), 1)
+
+        b = self.factor_loadings[1:].dot(w)
+        return b.T.dot(self.factor_var_cov).dot(b)[0][0]
+
+
     def get_portfolio_factor_return(self, weights):
+
         return self.factor_loadings.dot(weights).T.dot(self.factors)
 
-    def get_residual_var_covar(self, weights):
+    def get_portfolio_residual_covariance(self, weights):
         # estimator = LedoitWolf()
         # return estimator.fit(self.multi_regressor.residuals).covariance
-        sigma_e = np.cov(self.multi_regressor.residuals, rowvar=False)
         w = weights.reshape(len(weights), 1)
-        return w.T.dot(sigma_e).dot(w)[0][0]
+        return w.T.dot(self.residual_var_cov).dot(w)[0][0]
 
-    def set_factor_var_covar(self, eigen_values):
-        self.eig_vals = eigen_values
-        self.factor_var_covar = np.diag(eigen_values)
 
     def get_portfolio_factor_variance(self, weights: np.ndarray):
+
         w = weights.reshape(len(weights), 1)
         # ignore the loading of the intercept
         b = self.factor_loadings[1:].dot(w)
-        return b.T.dot(self.factor_var_covar).dot(b)[0][0]
+        return b.T.dot(self.factor_var_cov).dot(b)[0][0]
 
     def get_portfolio_total_variance(self, weights: np.ndarray):
 
         # track this in optimization
-        sigma_e = self.get_residual_var_covar(weights)
+        sigma_e = self.get_portfolio_residual_covariance(weights)
         sigma_f = self.get_portfolio_factor_variance(weights)
+
+        var = (sigma_e + sigma_f)
+        print(f"Proportion of volatility coming from factor estimate: {sigma_f / var}")
+        print(f"Proportion of volatility coming from residual estimate: {sigma_e / var}")
+
         return sigma_f + sigma_e
+
     def _get_portfolio_simple_return(self, y, weights):
         portfolio_returns = np.multiply(weights, y)
         self.mean_sample = np.mean(portfolio_returns)

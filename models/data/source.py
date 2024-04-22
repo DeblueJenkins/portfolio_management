@@ -9,8 +9,30 @@ import eikon as ek
 import datetime as dt
 import os
 import numpy as np
+import pandas as pd
+import warnings
 
 warnings.filterwarnings("ignore")
+
+
+def load_fed_rates_from_excel(path):
+
+    def convert_dates(date):
+        x = date.split('/')
+        return f'{x[2]}-{x[0]}-{x[1]}'
+
+
+    data = pd.read_csv(path)
+    data.dropna(axis=0, how='all', inplace=True)
+    data['Effective Date'] = data['Effective Date'].apply(lambda x: convert_dates(x))
+    data = data.groupby('Effective Date').first().reset_index()
+    data.set_index('Effective Date', inplace=True)
+    data = data.loc[:, 'Rate (%)'] / 100
+    data.name = 'FedRate'
+
+
+
+    return data
 
 class APIError(Exception):
     """An API Error Exception"""
@@ -132,7 +154,7 @@ class Eikon:
         for ric in rics:
             try:
                 data_dict[ric] = pd.read_csv(fr'{load_path}\{ric}.csv')
-                print(f'Loaded: {ric}')
+                # print(f'Loaded: {ric}')
             except Exception as e:
                 print(e)
         self.data_dict = data_dict
@@ -155,7 +177,7 @@ class Eikon:
                         except Exception as e:
                             print(f'Exception for {ric}: {repr(e)}')
 
-                        print(df_all.count())
+                        # print(df_all.count())
                         self.data = df_all
 
             else:
@@ -200,7 +222,6 @@ class EikonIndustryRegionClassifier(Eikon):
         #  'TR.CompanyMarketCap'
         for ric in rics:
             self.api.get_data(ric, fields=['TR.GICSSector'])
-
 
 
 
