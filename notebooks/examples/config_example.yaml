@@ -144,9 +144,9 @@ ASSETS:
 MODEL:
   hybrid: False
   main_factors:
-    PCA: 12
+    PCA: 10
   secondary_factors: []
-  regression_method: ols
+  regression_method: robust
   pca_method: ordinary
   opt_function: sortino
   reg_lambda: 10

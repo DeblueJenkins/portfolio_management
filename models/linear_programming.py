@@ -4,10 +4,12 @@ from models.data.source import Eikon
 from models.data.handler import DataHandler
 import pandas as pd
 from models.unsupervised.pca import PcaHandler
-from models.stat_models.linearregression import MultiOutputLinearRegressionModel
+from models.stat_models.linearregression import MultiOutputLinearRegressionModel, IterativelyWeightedLeastSquares
+from statsmodels.robust.robust_linear_model import RLM
 from portfolios.equity import EquityPortfolio
 import numpy as np
 import time
+from statsmodels.robust.norms import TukeyBiweight
 from sklearn.covariance import LedoitWolf
 
 class AbstractModel(ABC):
@@ -46,17 +48,25 @@ class LinearFactorModel(AbstractModel):
         if y is None:
             y = self.portfolio.returns
 
-        self.multi_regressor = MultiOutputLinearRegressionModel(x=X,
-                                                                y=y,
-                                                                method=self.config['MODEL']['regression_method'])
-        self.multi_regressor.fit()
-        self.multi_regressor.get_errors()
-        self.multi_regressor.diagnostics()
+        if self.config['MODEL']['regression_method'] == 'ols':
+
+            self.estimator = MultiOutputLinearRegressionModel(x=X,
+                                                              y=y,
+                                                              method='ols')
+
+        elif self.config['MODEL']['regression_method'] == 'robust':
+
+            self.estimator = IterativelyWeightedLeastSquares(x=X,
+                                                             y=y)
+        self.estimator.fit()
+        self.estimator.get_errors()
+        self.estimator.diagnostics()
+
 
         # if this is not diagonal, it's an approximate factor model
 
-        self.factors = self.multi_regressor.x[0,:].copy() # this is the last factor in the time-series
-        self.factor_loadings = self.multi_regressor.betas.copy()
+        self.factors = np.concatenate([[1], X[0,:]]) # this is the last factor in the time-series
+        self.factor_loadings = self.estimator.betas.copy()
 
 
         if out:
@@ -89,7 +99,7 @@ class LinearFactorModel(AbstractModel):
 
     def get_residual_var_cov(self, out=False):
 
-        self.residual_var_cov = np.cov(self.multi_regressor.residuals, rowvar=False)
+        self.residual_var_cov = np.cov(self.estimator.residuals, rowvar=False)
         if out:
             return self.residual_var_cov
 

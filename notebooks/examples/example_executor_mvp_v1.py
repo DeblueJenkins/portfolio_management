@@ -94,9 +94,9 @@ linear_model.set_factor_var_cov(eigen_values)
 linear_model.get_portfolio_total_variance(portfolio.weights)
 linear_model.get_portfolio_factor_return(portfolio.weights)
 
-mse = linear_model.multi_regressor.mse
-r2 = linear_model.multi_regressor.r2
-r2_adj = linear_model.multi_regressor.r2_adj
+mse = linear_model.estimator.mse
+r2 = linear_model.estimator.r2
+r2_adj = linear_model.estimator.r2_adj
 
 
 # r2.plot.bar(figsize=(11,8))

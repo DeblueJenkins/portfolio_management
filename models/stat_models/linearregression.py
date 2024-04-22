@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 from typing import List
 import warnings
 from dataclasses import dataclass, field
-from abc import ABC
+from abc import ABC, abstractmethod, abstractproperty
+from statsmodels.robust.robust_linear_model import RLM
+from statsmodels.robust.norms import *
 
 
 def generate_regression_data(betas: np.array, sigma: float, n: int = 100000):
@@ -45,6 +47,12 @@ class Model(ABC):
             self.x = np.array(self.x).reshape(self.n_x2, self.n_x1)
         else:
             raise Exception("X and y are not correct dimensions")
+
+    @abstractmethod
+    def fit(self):
+        pass
+
+
 
 
 class LinearRegressionModel(Model):
@@ -270,4 +278,67 @@ class MultiOutputLinearRegressionModel(LinearRegressionModel):
         else:
             print("first set tickers using set_tickers()")
 
+
+class IterativelyWeightedLeastSquares(Model):
+
+    def __init__(self, x, y, add_intercept: bool = True, **kwargs):
+
+        super().__init__(x, y, add_intercept)
+
+        self.n_y2 = np.shape(self.y)[1]
+        self.models = [None] * self.n_y2
+
+
+        for m in range(self.n_y2):
+            self.models[m] = RLM(exog=self.x,
+                                 endog=self.y.iloc[:,m].values,
+                                      **kwargs)
+
+        self.df_res = self.models[m].df_resid
+        self.df_total = self.models[m].df_model
+
+    def fit(self, *args, **kwargs):
+
+        self.betas = np.empty([self.n_x2, self.n_y2])
+        for m in range(self.n_y2):
+
+            self.models[m] = self.models[m].fit(*args, **kwargs)
+            self.betas[:, m] = self.models[m].params
+
+    def get_errors(self) -> None:
+        self.residuals = np.dot(self.x, self.betas) - self.y
+
+    def get_sigma(self):
+        if len(self.residuals) == 0:
+            self.get_errors()
+        return np.sqrt(np.dot(self.residuals.T, self.residuals) / (len(self.y) - len(self.betas) + 1))
+
+    def diagnostics(self, out=False):
+        self.get_errors()
+        self.get_sigma()
+        self.mse = self.compute_mse()
+        self.r2, self.r2_adj = self.get_r_square()
+        if out:
+            return {'mse': self.mse, 'r2': self.r2, 'r2_adj': self.r2_adj}
+
+    def compute_mse(self) -> float:
+        """
+        computes the MSE based on a beta vector (can be used to compare regularised vs non-regularised estimators)
+        :return: mse
+        """
+        return (self.residuals ** 2).mean()
+
+    def get_r_square(self) -> float:
+        """
+        coefficient of determination % explained variance in sample
+        :return: float
+        """
+        # ss_res = np.dot(self.residuals.T, self.residuals)
+        ss_res = (self.residuals ** 2).sum()
+        # ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
+        ss_tot = ((self.y - np.mean(self.y)) ** 2).sum()
+
+        r2 = 1 - ss_res/ss_tot
+        r2_adj = 1 - (ss_res/self.df_res) / (ss_tot/self.df_total)
+        return r2, r2_adj
 

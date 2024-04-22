@@ -37,11 +37,17 @@ class PerformanceAssesser:
 
         res = {}
 
-        self.value_portfolio = self.weights.T.dot(self.data.loc[:, self.portfolio.assets].T)
-        self.value_portfolio_eq = equal_weights.T.dot(self.data.loc[:, self.portfolio.assets].T)
+        self.value_portfolio = self.weights.T.dot(self.data_test.loc[:, self.portfolio.assets].T)
+        self.value_portfolio_eq = equal_weights.T.dot(self.data_test.loc[:, self.portfolio.assets].T)
+
+        self.value_portfolio_hist = self.weights.T.dot(self.data_all.loc[:, self.portfolio.assets].T)
+        self.value_portfolio_eq_hist = equal_weights.T.dot(self.data_all.loc[:, self.portfolio.assets].T)
 
         self.optimal_returns = np.log(self.value_portfolio / self.value_portfolio.shift(1))
         self.equal_returns = np.log(self.value_portfolio_eq / self.value_portfolio_eq.shift(1))
+
+        self.optimal_returns_hist = np.log(self.value_portfolio_hist / self.value_portfolio_hist.shift(1))
+        self.equal_returns_hist = np.log(self.value_portfolio_eq_hist / self.value_portfolio_eq_hist.shift(1))
 
         # res['value_portfolio'] = self.value_portfolio
         # res['value_portfolio_eq'] = self.value_portfolio_eq
@@ -50,8 +56,8 @@ class PerformanceAssesser:
 
         res['total_return_equally_weighted'] = self.equal_returns.sum().round(4)
         res['total_return_optimally_weighted'] = self.optimal_returns.sum().round(4)
-        res['volatility_equally_weighted'] = np.std(self.equal_returns).round(4)
-        res['volatility_optimally_weighted'] = np.std(self.optimal_returns).round(4)
+        res['volatility_equally_weighted'] = np.std(self.equal_returns_hist).round(4)
+        res['volatility_optimally_weighted'] = np.std(self.optimal_returns_hist).round(4)
 
         return res
 
@@ -59,8 +65,11 @@ class PerformanceAssesser:
     def _load_data(self):
 
         self.data = self.api.load_timeseries(**self.params_load)
-        self.data = self.data[(self.data['Calc Date'] > self.start_date) & (self.data['Calc Date'] < self.end_date)]
         self.data.set_index('Calc Date', inplace=True)
+        self.data_test = self.data[(self.data.index > self.start_date) & (self.data.index < self.end_date)]
+        self.data_all = self.data[(self.data.index < self.end_date)]
+
+
 
     def plot(self, path_save: str = None):
 
