@@ -149,7 +149,8 @@ MODEL:
   regression_method: robust
   pca_method: ordinary
   opt_function: sortino
-  reg_lambda: 10
+  quantile: 0.05
+  reg_lambda: 0.2
 
 CONSTRAINTS:
   allow_short_selling: True

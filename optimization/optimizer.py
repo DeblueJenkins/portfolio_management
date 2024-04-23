@@ -1,3 +1,5 @@
+import warnings
+
 import pandas as pd
 import yaml
 from portfolios.equity import EquityPortfolio
@@ -5,14 +7,14 @@ import numpy as np
 import scipy.optimize as sco
 import scipy as sp
 import pandas as pd
+from scipy import stats
 
 from models.linear_programming import LinearFactorModel
 from typing import Callable
 
 class Optimizer:
 
-    def __init__(self,  config_path: str, model: LinearFactorModel, portfolio: EquityPortfolio,
-                 target='sharpe_ratio'):
+    def __init__(self,  config_path: str, model: LinearFactorModel, portfolio: EquityPortfolio):
 
         self.model = model
         self.get_mean = self.model.get_portfolio_factor_return
@@ -26,7 +28,14 @@ class Optimizer:
             self.config = yaml.safe_load(f)
 
         self.portfolio = portfolio
-        self.target = target
+        self.target = self.config['MODEL']['opt_function']
+        if self.target == 'expected_shortfall_univariate':
+            if self.config['MODEL']['quantile'] is None:
+                warnings.warn('ES Quantile set to 1% default, please specify otherwise')
+                self.conf = 0.99
+            else:
+                self.conf = self.config['MODEL']['quantile']
+
         self.weights = self.portfolio.weights
         self.allow_short_selling = self.portfolio.allow_short_selling
         self.allow_leverage = self.portfolio.allow_leverage
@@ -71,6 +80,17 @@ class Optimizer:
 
         return l * np.linalg.norm(x ** 2)
 
+    def _get_expected_shortfall(self, x, conf: float):
+        alpha = 1 - conf
+        mu = self.model.get_portfolio_factor_return(x)
+        vol = self.model.get_portfolio_factor_variance(x) ** 0.5
+        # these can be looked up in a dictionary simply
+        VaR = stats.norm.ppf(q=alpha, loc=0, scale=1)
+        phi = stats.norm.pdf(x=VaR, loc=0, scale=1)
+        es = mu - vol * phi / (1 - conf)
+        return es
+
+
     def find_optimal_weights(self):
 
         target = self.portfolio.config['MODEL']['opt_function']
@@ -78,6 +98,10 @@ class Optimizer:
             f_ = lambda x: -1 * self._get_sharpe(x) + self._add_penalty(x, l=self.reg_lambda)
         elif target == 'sortino':
             f_ = lambda x: -1 * self._get_sortino(x) + self._add_penalty(x, l=self.reg_lambda)
+        elif target == 'expected_shortfall_univariate':
+            # this calculates it on portfolio level
+            f_ = lambda x: -1 * self.model.get_portfolio_factor_return(x) / self._get_expected_shortfall(x, self.conf)
+
         else:
             raise Exception(f'Target opt. function {target} does not exist')
 
