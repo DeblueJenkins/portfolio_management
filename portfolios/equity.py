@@ -2,7 +2,7 @@ from typing import Dict, List
 import yaml
 import numpy as np
 import pandas as pd
-
+import warnings
 
 class EquityPortfolio:
 
@@ -23,6 +23,14 @@ class EquityPortfolio:
             self.config = yaml.safe_load(f)
 
         self.assets: List[str] = list(self.config['ASSETS'].keys())
+        self.asset_universe = list(pd.read_csv(self.config['PATHS']['load_path_asset_universe']).iloc[:,1].to_numpy())
+        _check_assets = [a for a in self.assets if a not in self.asset_universe]
+
+        if len(_check_assets) > 0:
+            warnings.warn(f'Assets {_check_assets} are in portfolio, but not in the asset universe')
+            warnings.warn(f'Default option: adding them in asset universe')
+            self.asset_universe += self.assets
+
         self.horizon = self.config['HORIZON']
         self.n_assets: int = len(self.assets)
         self.weights_constraints: np.ndarray = np.array([list(_.values())[0] for _ in self.config['ASSETS'].values()])

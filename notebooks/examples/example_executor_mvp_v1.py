@@ -24,7 +24,7 @@ path_data = fr'{Path(__file__).parents[2]}\models\data'
 path_apikeys = r'C:\Users\serge\OneDrive\reuters\apikeys.csv'
 
 eikon_api = Eikon(path_apikeys)
-portfolio = EquityPortfolio(config_path='config_example.yaml')
+portfolio = EquityPortfolio(config_path='config_example_2.yaml')
 
 # params = {
 #     'rics': portfolio.assets,
@@ -33,8 +33,11 @@ portfolio = EquityPortfolio(config_path='config_example.yaml')
 #     'load_path': os.path.join(path_data, 'csv')
 # }
 
+already_downloaded = [x[:-4] for x in os.listdir(os.path.join(path_data, 'csv'))]
+rics = [x for x in portfolio.assets if x not in already_downloaded]
+
 params = {
-    'rics': portfolio.assets,
+    'rics': rics,
     'field': ['TR.PriceClose', 'Price Close'],
     'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
     'params': {

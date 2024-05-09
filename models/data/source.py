@@ -191,7 +191,7 @@ class Eikon:
             ind = []
             ind.append(index)
             index = ind
-        elif not isinstance(index, list) or not isinstance(index, str):
+        elif not (isinstance(index, list) or isinstance(index, str)):
             raise UserWarning('index must be string or list of str')
 
         for i in range(len(index)):
@@ -199,11 +199,11 @@ class Eikon:
                 temp_rics, err = self.api.get_data(index[i], ['TR.IndexConstituentRIC' , 'TR.IndexConstituentName'], {'SDate': date})
                 # all_rics, err = ek.get_data(indices_rics[2], ['TR.IndexConstituentRIC' , 'TR.IndexConstituentName'])
                 print(f'Retrieved {time.time() - t0}')
-
+                e = None
             except Exception as e:
-                print(err)
                 print(e)
-            if err is None:
+                continue
+            if e is None:
                 all_rics.append(temp_rics['Constituent RIC'].to_list())
 
         return all_rics[0]

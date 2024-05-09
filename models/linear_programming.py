@@ -11,6 +11,7 @@ import numpy as np
 import time
 from statsmodels.robust.norms import TukeyBiweight
 from sklearn.covariance import LedoitWolf
+import seaborn as sns
 
 class AbstractModel(ABC):
 
@@ -60,13 +61,21 @@ class LinearFactorModel(AbstractModel):
                                                              y=y)
         self.estimator.fit()
         self.estimator.get_errors()
-        self.estimator.diagnostics()
+        metrics = self.estimator.diagnostics(out=True)
+
+        print('Proportion of significant factor loadings:')
+        print(*((self.estimator.pvalues < 0.05).sum(axis=1) / len(self.assets)).round(2))
+
+
 
 
         # if this is not diagonal, it's an approximate factor model
 
         self.factors = np.concatenate([[1], X[0,:]]) # this is the last factor in the time-series
         self.factor_loadings = self.estimator.betas.copy()
+        idx = np.isin(self.estimator.assets, self.portfolio.assets)
+        idx = np.where(idx == True)[0]
+        self.factor_loadings = self.factor_loadings[:, idx]
 
 
         if out:

@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import t
 import pandas as pd
 import matplotlib.pyplot as plt
-from typing import List
+from typing import List, Union
 import warnings
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod, abstractproperty
@@ -27,18 +27,25 @@ def generate_regression_data(betas: np.array, sigma: float, n: int = 100000):
 
 
 @dataclass
-class Model(ABC):
+class GeneralizedLinearModel(ABC):
     x: np.ndarray
     y: np.ndarray
     add_intercept: bool = True
     method: str = 'ols'
     conf: float = 0.95
 
+
     def __post_init__(self):
 
         if self.add_intercept:
             self.x = np.insert(self.x, 0, 1, axis=1)
-        self.n_y1 = len(self.y)
+
+        try:
+            self.n_y1, self.n_y2 = np.shape(self.y)
+        except:
+            self.n_y1 = len(self.y)
+            self.n_y2 = 1
+
         self.n_x1, self.n_x2 = np.shape(self.x)
 
         if self.n_x1 == self.n_y1:
@@ -48,14 +55,66 @@ class Model(ABC):
         else:
             raise Exception("X and y are not correct dimensions")
 
+        self.assets = self.y.columns
+        self.dates = self.y.index.values
+        self.y = self.y.to_numpy()
+
+        self.betas = np.ndarray([self.n_x2, self.n_y2])
+        self.residuals = np.ndarray([self.n_x1, self.n_y2])
+        self.pvalues = np.ndarray([self.n_x2, self.n_y2])
+        self._reshape_y()
+
+    def _reshape_y(self):
+        self.y = self.y.reshape(self.n_y1, self.n_y2)
+
     @abstractmethod
-    def fit(self):
+    def fit(self) -> None:
+        """
+        Must set parameters self.betas
+        :return:
+        """
         pass
 
+    def get_errors(self, out: bool = False) -> Union[None, np.ndarray]:
+        self.residuals = np.dot(self.x, self.betas) - self.y
+        if out:
+            return self.residuals
+
+    def get_sigma(self) -> float:
+        if len(self.residuals) == 0:
+            self.get_errors()
+        return np.sqrt(np.dot(self.residuals.T, self.residuals) / (len(self.y) - len(self.betas) + 1))
+
+    def diagnostics(self, out=False):
+        self.get_errors()
+        self.get_sigma()
+        self.mse = self.compute_mse()
+        self.r2, self.r2_adj = self.get_r_square()
+        if out:
+            return {'mse': self.mse, 'r2': self.r2, 'r2_adj': self.r2_adj}
+
+    def compute_mse(self) -> float:
+        """
+        computes the MSE based on a beta vector (can be used to compare regularised vs non-regularised estimators)
+        :return: mse
+        """
+        return (self.residuals ** 2).mean(axis=0)
+    def get_r_square(self) -> float:
+        """
+        coefficient of determination % explained variance in sample
+        :return: float
+        """
+        # ss_res = np.dot(self.residuals.T, self.residuals)
+        ss_res = (self.residuals ** 2).sum(axis=0)
+        # ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
+        ss_tot = ((self.y - np.mean(self.y)) ** 2).sum(axis=0)
+
+        r2 = 1 - ss_res/ss_tot
+        r2_adj = 1 - (ss_res/self.df_res) / (ss_tot/self.df_total)
+        return r2, r2_adj
 
 
-
-class LinearRegressionModel(Model):
+class LinearRegressionModel(GeneralizedLinearModel):
 
     def __init__(self, *args, l1: float = 0, w: np.ndarray = None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -81,16 +140,6 @@ class LinearRegressionModel(Model):
         ## TO DO:
         # self.betas, self.residuals, self.mse should be setter/getters
 
-    def _reshape_y(self):
-        self.y = self.y.reshape(self.n_y1, 1)
-
-    def get_errors(self) -> None:
-        self.residuals = np.dot(self.x, self.betas) - self.y
-
-    def get_sigma(self):
-        if len(self.residuals) == 0:
-            self.get_errors()
-        return np.sqrt(np.dot(self.residuals.T, self.residuals) / (len(self.y) - len(self.betas) + 1))
 
     def fit(self, out: bool = False) -> np.ndarray:
         """
@@ -103,88 +152,6 @@ class LinearRegressionModel(Model):
         self.betas = np.linalg.multi_dot([np.linalg.inv(reg_mat), self.x.T, self.W, self.y])
         if out:
             return self.betas
-
-    def predict(self, x):
-        if self.add_intercept:
-            if x.ndim == 1:
-                x = np.insert(x, 0, 1)
-            elif x.ndim == 2:
-                x = np.insert(x, 0, 1, axis=1)
-        return self.betas.T.dot(x)
-
-    def diagnostics(self, out=False):
-        self.get_errors()
-        self.get_sigma()
-        self.mse = self.compute_mse()
-        self.r2, self.r2_adj = self.get_r_square()
-        if out:
-            return {'mse': self.mse, 'r2': self.r2, 'r2_adj': self.r2_adj}
-
-    def compute_mse(self) -> float:
-        """
-        computes the MSE based on a beta vector (can be used to compare regularised vs non-regularised estimators)
-        :return: mse
-        """
-        return (self.residuals ** 2).mean()
-
-    def compute_standard_errors(self, how: str = 'ols') -> np.ndarray:
-        """
-        computes the standard errors
-
-        :return: np.array of standard errors per beta parameter
-        """
-        if how == 'ols':
-            std_err = np.ones(shape=(np.shape(self.betas)))
-            xtx_inv = np.linalg.inv(self.xTx)
-            for i in range(len(self.betas)):
-                std_err[i] = self.sigma * np.sqrt(xtx_inv[i][i])
-        elif how == 'ridge':
-            # Do not know whether this works for ridged regression
-            warnings.warn('Did not calculate errors for ridge regression')
-            std_err = np.repeat(np.nan, len(self.betas))
-        else:
-            raise Exception(f'{how} method not implemented')
-
-        return std_err
-
-    def perform_t_tests(self, method: str = 'ols') -> pd.DataFrame:
-        """
-        performs the t-tests for each parameter
-
-        :return: pd.DataFrame of test results
-        """
-        if method == 'ols':
-            std_err = self.compute_standard_errors()
-            df = len(self.y) - len(self.betas) + 1
-            top_quantile = self.betas + t.ppf(1 - self.conf / 2, df=df) * std_err
-            bot_quantile = self.betas + t.ppf(self.conf / 2, df=df) * std_err
-            checks = []
-            for a, b in zip(bot_quantile, top_quantile):
-                if a <= 0 <= b:
-                    checks.append("Not Significant")
-                else:
-                    checks.append("Significant")
-
-            return pd.DataFrame({"bot quantile:": list(bot_quantile),
-                                 "top quantile:": list(top_quantile),
-                                 "Results": checks})
-        else:
-            raise Exception(f'{method} t-tests not implemented')
-
-    def get_r_square(self) -> float:
-        """
-        coefficient of determination % explained variance in sample
-        :return: float
-        """
-        # ss_res = np.dot(self.residuals.T, self.residuals)
-        ss_res = (self.residuals ** 2).sum()
-        # ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
-        ss_tot = ((self.y - np.mean(self.y)) ** 2).sum()
-
-        r2 = 1 - ss_res/ss_tot
-        r2_adj = 1 - (ss_res/self.df_res) / (ss_tot/self.df_total)
-        return r2, r2_adj
-
 
     def plot(self) -> None:
         """
@@ -205,10 +172,10 @@ class LinearRegressionModel(Model):
 
         fig.show()
 
-
 class MultiOutputLinearRegressionModel(LinearRegressionModel):
 
     def __init__(self, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
         """
         Linear Regression with multiple y variables
@@ -217,11 +184,6 @@ class MultiOutputLinearRegressionModel(LinearRegressionModel):
         :param y: vector of dependent variables
         :param tickers: list of ticker names
         """
-
-        self.n_y2 = np.shape(self.y)[1]
-
-    def _reshape_y(self):
-        pass
 
     def _set_tickers(self, tickers: List):
         if (isinstance(tickers, list)) and (self.n_y2 == len(tickers)):
@@ -264,7 +226,6 @@ class MultiOutputLinearRegressionModel(LinearRegressionModel):
         ax2.legend()
 
         fig.show()
-
     def plot_ticker(self, ticker: str):
         """
         plots the summary of a single regression based on its ticker
@@ -278,8 +239,7 @@ class MultiOutputLinearRegressionModel(LinearRegressionModel):
         else:
             print("first set tickers using set_tickers()")
 
-
-class IterativelyWeightedLeastSquares(Model):
+class IterativelyWeightedLeastSquares(GeneralizedLinearModel):
 
     def __init__(self, x, y, add_intercept: bool = True, **kwargs):
 
@@ -291,7 +251,7 @@ class IterativelyWeightedLeastSquares(Model):
 
         for m in range(self.n_y2):
             self.models[m] = RLM(exog=self.x,
-                                 endog=self.y.iloc[:,m].values,
+                                 endog=self.y[:,m],
                                       **kwargs)
 
         self.df_res = self.models[m].df_resid
@@ -299,46 +259,12 @@ class IterativelyWeightedLeastSquares(Model):
 
     def fit(self, *args, **kwargs):
 
-        self.betas = np.empty([self.n_x2, self.n_y2])
+        self.results = [None] * self.n_y2
+
         for m in range(self.n_y2):
 
-            self.models[m] = self.models[m].fit(*args, **kwargs)
-            self.betas[:, m] = self.models[m].params
+            self.results[m] = self.models[m].fit(*args, **kwargs)
+            self.betas[:, m] = self.results[m].params
+            self.pvalues[:, m] = self.results[m].pvalues.round(4)
 
-    def get_errors(self) -> None:
-        self.residuals = np.dot(self.x, self.betas) - self.y
-
-    def get_sigma(self):
-        if len(self.residuals) == 0:
-            self.get_errors()
-        return np.sqrt(np.dot(self.residuals.T, self.residuals) / (len(self.y) - len(self.betas) + 1))
-
-    def diagnostics(self, out=False):
-        self.get_errors()
-        self.get_sigma()
-        self.mse = self.compute_mse()
-        self.r2, self.r2_adj = self.get_r_square()
-        if out:
-            return {'mse': self.mse, 'r2': self.r2, 'r2_adj': self.r2_adj}
-
-    def compute_mse(self) -> float:
-        """
-        computes the MSE based on a beta vector (can be used to compare regularised vs non-regularised estimators)
-        :return: mse
-        """
-        return (self.residuals ** 2).mean()
-
-    def get_r_square(self) -> float:
-        """
-        coefficient of determination % explained variance in sample
-        :return: float
-        """
-        # ss_res = np.dot(self.residuals.T, self.residuals)
-        ss_res = (self.residuals ** 2).sum()
-        # ss_tot = np.dot((self.y - np.mean(self.y)).T, self.y - np.mean(self.y))
-        ss_tot = ((self.y - np.mean(self.y)) ** 2).sum()
-
-        r2 = 1 - ss_res/ss_tot
-        r2_adj = 1 - (ss_res/self.df_res) / (ss_tot/self.df_total)
-        return r2, r2_adj
 

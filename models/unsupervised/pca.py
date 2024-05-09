@@ -57,7 +57,7 @@ class PcaBaseClass(ABC):
 
         if isinstance(data, pd.DataFrame):
             self.index = np.array(data.index)
-            self.assets = list(data.columns[1:])
+            self.assets = list(data.columns)
             self.raw_data = data.astype(float).values
         elif isinstance(data, np.ndarray):
             self.index = np.arange(len(data))
@@ -80,7 +80,7 @@ class PcaBaseClass(ABC):
 
 class PcaHandler(PcaBaseClass):
 
-    def __init__(self, X, demean: bool = True, method : str = 'svd', covariance: str = 'mle'):
+    def __init__(self, X, demean: bool = True, method : str = 'svd'):
         """
         Principle Component Object
         :param data: matrix of data (free of type can be a data frame or numpy array)
@@ -93,8 +93,9 @@ class PcaHandler(PcaBaseClass):
         elif method == 'pca':
             if X.shape[0] != X.shape[1]:
                 raise Exception('When method is pca, please provide square matrix (covariance)')
-            if np.sum(X != X.T):
+            if np.sum(X != X.T).sum() != 0:
                 raise Exception('Covariance matrix must be symmetric')
+            demean = False
         else:
             raise Exception('Method must be either svd (on data) or pca (on covariance matrix)')
 
@@ -103,10 +104,8 @@ class PcaHandler(PcaBaseClass):
         if self.method == 'svd':
             self.cov_data = np.cov(self.x.T)
         else:
-            if covariance == 'mle':
-                self.cov_data = np.cov(self.raw_data.T)
-            else:
-                raise Exception('only mle covariance is supported')
+            self.cov_data = self.x
+
         self.cov_pca = np.array([])
         if method == 'svd':
             self._get_svd()
@@ -128,7 +127,7 @@ class PcaHandler(PcaBaseClass):
 
         """
         self.cov_pca = np.linalg.multi_dot([self.eig_vecs, np.diag(self.eig_vals), self.eig_vecs.T])
-        print(sum(self.cov_pca - self.cov_data))
+        print(sum(sum(self.cov_pca - self.cov_data)))
 
     def components(self, n: int, data: np.ndarray = None) -> np.array:
         """

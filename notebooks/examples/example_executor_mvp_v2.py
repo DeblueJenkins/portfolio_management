@@ -22,7 +22,7 @@ class Executor:
         self.portfolio = EquityPortfolio(config_path='config_example.yaml')
 
         self.params = {
-            'rics': self.portfolio.assets,
+            'rics': self.portfolio.asset_universe,
             'field': ['TR.PriceClose', 'Price Close'],
             'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
             'load_path': os.path.join(self.path_data, 'csv')
@@ -41,21 +41,29 @@ class Executor:
     def _preprocess(self):
 
         preprocessor = DataHandler(data=self.data,
-                                   data_rates=self.rf,
-                                   horizon=self.portfolio.horizon,
                                    date_col=self.params['date_field'][1])
+
+        preprocessor.set_risk_free_rates(
+            data_rates=self.rf,
+            horizon=self.portfolio.horizon)
 
         self.returns = preprocessor.get_excess_returns(period=self.portfolio.horizon)
 
-        self.returns.dropna(inplace=True, axis=0)
-        self.returns.dropna(inplace=True, axis=1)
+        self.returns.dropna(inplace=True, how='all', axis=0)
+        self.returns.dropna(inplace=True, how='all', axis=1)
+        self.returns.dropna(inplace=True, how='any', axis=1)
 
         self.n_pca_components = self.portfolio.config['MODEL']['main_factors']['PCA']
-        self.pca_method = self.portfolio.config['MODEL']['pca_method']
+        self.pca_parameters = self.portfolio.config['MODEL']['pca_parameters']
+
 
         self.factors, self.eigen_values = preprocessor.get_pca_factors(n_components=self.n_pca_components,
                                                                        data=self.returns,
-                                                                       method=self.pca_method)
+                                                                       **self.pca_parameters)
+
+        preprocessor._pca_model.plot(self.n_pca_components)
+        plt.savefig(fr"{self.portfolio.config['PATHS']['save_path_diagnostics']}\explained_variance_pca.png")
+        plt.close()
 
         self.portfolio.set_returns(self.returns)
         self.portfolio.set_factors(self.factors)
@@ -67,9 +75,11 @@ class Executor:
                                          portfolio=self.portfolio)
 
         self.linear_model.fit()
+
         self.linear_model.set_factor_var_cov(self.eigen_values)
         self.linear_model.get_factor_mean()
         self.linear_model.get_residual_var_cov()
+
 
     def run_optimization(self):
 
@@ -89,7 +99,7 @@ class Executor:
 
 if __name__ == '__main__':
 
-    START_DATE = '1999-12-31'
+    START_DATE = '2005-12-31'
     # this is included for data, but there is no leakage
     END_DATE = START_DATE_TEST = '2023-06-04'
     END_DATE_TEST = '2023-07-20'
