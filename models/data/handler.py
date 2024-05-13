@@ -74,14 +74,16 @@ class DataHandler:
 
 
     def get_pca_factors(self, n_components: int, data: np.ndarray = None, pca_method: str = 'ordinary',
-                        method: str = 'svd', covariance: str = None):
+                        method: str = 'svd', covariance_estimate: str = 'mle'):
 
         if method == 'pca':
+            # does PCA on correlation
             s = data.std().to_numpy()
             s = np.outer(s,s)
-            if covariance == 'mle':
-                X = data.cov().to_numpy() / s
-            elif covariance == 'ledoit-wolf':
+            if covariance_estimate == 'mle':
+                # X = data.cov().to_numpy() / s
+                X = data.cov()
+            elif covariance_estimate == 'ledoit-wolf':
                 X = LedoitWolf().fit(X=data).covariance_ / s
                 np.fill_diagonal(X, 1)
             X = pd.DataFrame(data=X, index=data.columns, columns=data.columns)

@@ -26,7 +26,9 @@ class PcaBaseClass(ABC):
             warnings.warn('Possible instability in the SVD')
 
         eig_vecs = v.T
+
         eig_vals = np.power(s, 2) / (n - 1)
+        # eig_vals = np.power(s, 2)
 
         return singular_values, eig_vals, eig_vecs
 
@@ -124,9 +126,19 @@ class PcaHandler(PcaBaseClass):
 
         """
         Compares the PCA covariance to the empirical covariance.
-
         """
-        self.cov_pca = np.linalg.multi_dot([self.eig_vecs, np.diag(self.eig_vals), self.eig_vecs.T])
+
+        if self.method == 'svd':
+
+            # this is diagonal rectangular
+            l = np.concatenate([np.diag(self.singular_values), np.zeros([self.n, self.m-self.n])], axis=1)
+            l = l.T.dot(l)
+            self.cov_pca = np.linalg.multi_dot([self.eig_vecs, l, self.eig_vecs.T]) / (self.n - 1)
+        else:
+            l = np.diag(self.eig_vals)
+            self.cov_pca = np.linalg.multi_dot([self.eig_vecs, l, self.eig_vecs.T])
+
+
         print(sum(sum(self.cov_pca - self.cov_data)))
 
     def components(self, n: int, data: np.ndarray = None) -> np.array:

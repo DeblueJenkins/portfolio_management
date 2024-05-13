@@ -150,7 +150,7 @@ MODEL:
   pca_parameters:
     pca_method: ordinary
     method: svd
-    covariance:
+    covariance_estimate:
   opt_function: sortino
   quantile: 0.05
   reg_lambda: 0.2

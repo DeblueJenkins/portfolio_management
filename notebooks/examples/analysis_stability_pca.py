@@ -6,6 +6,15 @@ import os
 import matplotlib.pyplot as plt
 from models.stat_models.linearregression import *
 
+def cosine_similarity(x,y):
+
+    assert x.shape == y.shape
+
+    norm_x = np.sum(x ** 2)
+    norm_y = np.sum(y ** 2)
+
+    return x.dot(y) / (norm_x * norm_y)
+
 path_data = fr'{Path(__file__).parents[2]}\models\data'
 path_apikeys = r'C:\Users\serge\OneDrive\reuters\apikeys.csv'
 
@@ -44,14 +53,29 @@ betas_r2a = np.zeros((T-window-t_start, n_components+1, n_assets))
 eigenvals = pd.DataFrame(index=returns.index[t_start+period:],
                          data=np.zeros((T-window-t_start, n_components)))
 
+similarity = {}
+_sim_pca = {}
+_sim_r2pca = {}
 for t in np.arange(t_start, T-window):
     print(t)
     r = returns.iloc[:t+window, :n_assets]
     pca = PcaHandler(X=r, demean=True, method='svd')
     r2pca = R2Pca(data=r, rolling_window=window)
     # pca.benchmark_test()
+
+
     factors = pca.components(n=n_components)
     factors_r2pca = r2pca.components(n=n_components)
+
+    r2pca_last_date = list(r2pca.eigenvector_dict.keys())[-1]
+    r2pca.eig_vecs = r2pca.eigenvector_dict[r2pca_last_date]
+
+    # cosine similarity
+    _sim_pca[t] = cosine_similarity(pca.eig_vecs[:,0], pca.eig_vecs[:,1])
+    _sim_r2pca[t] = cosine_similarity(r2pca.eig_vecs[:,0], r2pca.eig_vecs[:,1])
+
+
+
     last_factors.iloc[t-t_start, :] = factors[-1,:]
     eigenvals.iloc[t-t_start, :] = pca.eig_vals[:n_components]
     x_pc = (factors[window-1:, :] - factors[window-1:, :].mean(axis=0)) / factors[window-1:, :].std(axis=0)

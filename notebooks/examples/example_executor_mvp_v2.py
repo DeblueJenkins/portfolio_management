@@ -1,3 +1,5 @@
+import copy
+
 from portfolios.equity import EquityPortfolio
 from models.data.source import Eikon, load_fed_rates_from_excel
 from models.data.handler import DataHandler
@@ -61,7 +63,9 @@ class Executor:
                                                                        data=self.returns,
                                                                        **self.pca_parameters)
 
+        preprocessor._pca_model.benchmark_test()
         preprocessor._pca_model.plot(self.n_pca_components)
+
         plt.savefig(fr"{self.portfolio.config['PATHS']['save_path_diagnostics']}\explained_variance_pca.png")
         plt.close()
 
