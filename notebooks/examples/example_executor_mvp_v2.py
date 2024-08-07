@@ -54,6 +54,7 @@ class Executor:
         self.returns.dropna(inplace=True, how='all', axis=0)
         self.returns.dropna(inplace=True, how='all', axis=1)
         self.returns.dropna(inplace=True, how='any', axis=1)
+        # self.returns = self.returns.T
 
         self.n_pca_components = self.portfolio.config['MODEL']['main_factors']['PCA']
         self.pca_parameters = self.portfolio.config['MODEL']['pca_parameters']

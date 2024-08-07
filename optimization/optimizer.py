@@ -80,6 +80,16 @@ class Optimizer:
 
         return l * np.linalg.norm(x ** 2)
 
+    def _get_value_at_risk(self, x, conf: float):
+
+        alpha = 1 - conf
+        mu = self.model.get_portfolio_factor_return(x)
+        vol = self.model.get_portfolio_factor_variance(x) ** 0.5
+        # these can be looked up in a dictionary simply
+        VaR = stats.norm.ppf(q=alpha, loc=mu, scale=vol)
+
+        return VaR
+
     def _get_expected_shortfall(self, x, conf: float):
         alpha = 1 - conf
         mu = self.model.get_portfolio_factor_return(x)
@@ -89,6 +99,7 @@ class Optimizer:
         phi = stats.norm.pdf(x=VaR, loc=0, scale=1)
         es = mu - vol * phi / (1 - conf)
         return es
+
 
 
     def find_optimal_weights(self):

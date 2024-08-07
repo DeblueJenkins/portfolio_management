@@ -1,0 +1,1296 @@
+HORIZON:
+  7
+ASSET_UNIVERSE:
+
+ASSETS:
+  POOL.OQ:
+    constr: 0.05
+  CHRW.OQ:
+    constr: 0.05
+  AJG.N:
+    constr: 0.05
+  CNP.N:
+    constr: 0.05
+  AMCR.N:
+    constr: 0.05
+  WM.N:
+    constr: 0.05
+  BA.N:
+    constr: 0.05
+  FOX.OQ:
+    constr: 0.05
+  WY.N:
+    constr: 0.05
+  MCD.N:
+    constr: 0.05
+  HD.N:
+    constr: 0.05
+  SPG.N:
+    constr: 0.05
+  HBAN.OQ:
+    constr: 0.05
+  QRVO.OQ:
+    constr: 0.05
+  LVS.N:
+    constr: 0.05
+  CTRA.N:
+    constr: 0.05
+  ON.OQ:
+    constr: 0.05
+  AIG.N:
+    constr: 0.05
+  AIZ.N:
+    constr: 0.05
+  CARR.N:
+    constr: 0.05
+  EVRG.OQ:
+    constr: 0.05
+  SMCI.OQ:
+    constr: 0.05
+  COST.OQ:
+    constr: 0.05
+  MCO.N:
+    constr: 0.05
+  DIS.N:
+    constr: 0.05
+  LULU.OQ:
+    constr: 0.05
+  PAYX.OQ:
+    constr: 0.05
+  AMD.OQ:
+    constr: 0.05
+  REG.OQ:
+    constr: 0.05
+  DHI.N:
+    constr: 0.05
+  TRV.N:
+    constr: 0.05
+  BIO.N:
+    constr: 0.05
+  MOS.N:
+    constr: 0.05
+  BWA.N:
+    constr: 0.05
+  WDC.OQ:
+    constr: 0.05
+  VTR.N:
+    constr: 0.05
+  IVZ.N:
+    constr: 0.05
+  ZBRA.OQ:
+    constr: 0.05
+  AMAT.OQ:
+    constr: 0.05
+  STX.OQ:
+    constr: 0.05
+  FDS.N:
+    constr: 0.05
+  KVUE.N:
+    constr: 0.05
+  SYK.N:
+    constr: 0.05
+  VRSN.OQ:
+    constr: 0.05
+  TECH.OQ:
+    constr: 0.05
+  NVR.N:
+    constr: 0.05
+  JBL.N:
+    constr: 0.05
+  BBWI.N:
+    constr: 0.05
+  LOW.N:
+    constr: 0.05
+  BSX.N:
+    constr: 0.05
+  SYY.N:
+    constr: 0.05
+  FCX.N:
+    constr: 0.05
+  MAS.N:
+    constr: 0.05
+  BEN.N:
+    constr: 0.05
+  META.OQ:
+    constr: 0.05
+  PAYC.N:
+    constr: 0.05
+  EXPE.OQ:
+    constr: 0.05
+  RJF.N:
+    constr: 0.05
+  CL.N:
+    constr: 0.05
+  VICI.N:
+    constr: 0.05
+  CE.N:
+    constr: 0.05
+  UNH.N:
+    constr: 0.05
+  ARE.N:
+    constr: 0.05
+  GEN.OQ:
+    constr: 0.05
+  LLY.N:
+    constr: 0.05
+  DAY.N:
+    constr: 0.05
+  GRMN.N:
+    constr: 0.05
+  PODD.OQ:
+    constr: 0.05
+  ISRG.OQ:
+    constr: 0.05
+  AVB.N:
+    constr: 0.05
+  TPR.N:
+    constr: 0.05
+  CBRE.N:
+    constr: 0.05
+  CINF.OQ:
+    constr: 0.05
+  WMB.N:
+    constr: 0.05
+  EA.OQ:
+    constr: 0.05
+  CPRI.N:
+    constr: 0.05
+  TMUS.OQ:
+    constr: 0.05
+  CB.N:
+    constr: 0.05
+  TXN.OQ:
+    constr: 0.05
+  MDLZ.OQ:
+    constr: 0.05
+  BRO.N:
+    constr: 0.05
+  BALL.N:
+    constr: 0.05
+  PFG.OQ:
+    constr: 0.05
+  KEYS.N:
+    constr: 0.05
+  PCG.N:
+    constr: 0.05
+  RL.N:
+    constr: 0.05
+  JPM.N:
+    constr: 0.05
+  TTWO.OQ:
+    constr: 0.05
+  CDW.OQ:
+    constr: 0.05
+  RMD.N:
+    constr: 0.05
+  LNT.OQ:
+    constr: 0.05
+  COO.OQ:
+    constr: 0.05
+  CMG.N:
+    constr: 0.05
+  PCAR.OQ:
+    constr: 0.05
+  GNRC.N:
+    constr: 0.05
+  CHTR.OQ:
+    constr: 0.05
+  PWR.N:
+    constr: 0.05
+  CCL.N:
+    constr: 0.05
+  PM.N:
+    constr: 0.05
+  SNA.N:
+    constr: 0.05
+  UAL.OQ:
+    constr: 0.05
+  ESS.N:
+    constr: 0.05
+  KHC.OQ:
+    constr: 0.05
+  BLDR.N:
+    constr: 0.05
+  JBHT.OQ:
+    constr: 0.05
+  CMI.N:
+    constr: 0.05
+  PNR.N:
+    constr: 0.05
+  CRL.N:
+    constr: 0.05
+  DPZ.N:
+    constr: 0.05
+  AGN.N^E20:
+    constr: 0.05
+  DECK.N:
+    constr: 0.05
+  HPQ.N:
+    constr: 0.05
+  ROP.OQ:
+    constr: 0.05
+  LW.N:
+    constr: 0.05
+  TGT.N:
+    constr: 0.05
+  NTAP.OQ:
+    constr: 0.05
+  OXY.N:
+    constr: 0.05
+  IR.N:
+    constr: 0.05
+  TER.OQ:
+    constr: 0.05
+  WAB.N:
+    constr: 0.05
+  NOW.N:
+    constr: 0.05
+  EXC.OQ:
+    constr: 0.05
+  BR.N:
+    constr: 0.05
+  EMN.N:
+    constr: 0.05
+  AZO.N:
+    constr: 0.05
+  TEL.N:
+    constr: 0.05
+  FRT.N:
+    constr: 0.05
+  DUK.N:
+    constr: 0.05
+  KMI.N:
+    constr: 0.05
+  DVN.N:
+    constr: 0.05
+  RCL.N:
+    constr: 0.05
+  VTRS.OQ:
+    constr: 0.05
+  CAH.N:
+    constr: 0.05
+  AAL.OQ:
+    constr: 0.05
+  MKC.N:
+    constr: 0.05
+  IEX.N:
+    constr: 0.05
+  VLO.N:
+    constr: 0.05
+  EXPD.N:
+    constr: 0.05
+  LH.N:
+    constr: 0.05
+  DRI.N:
+    constr: 0.05
+  MAA.N:
+    constr: 0.05
+  JNJ.N:
+    constr: 0.05
+  COR.N:
+    constr: 0.05
+  SHW.N:
+    constr: 0.05
+  GD.N:
+    constr: 0.05
+  SBAC.OQ:
+    constr: 0.05
+  MPWR.OQ:
+    constr: 0.05
+  COP.N:
+    constr: 0.05
+  ORCL.N:
+    constr: 0.05
+  AMP.N:
+    constr: 0.05
+  NXPI.OQ:
+    constr: 0.05
+  CPRT.OQ:
+    constr: 0.05
+  TXT.N:
+    constr: 0.05
+  T.N:
+    constr: 0.05
+  MTCH.OQ:
+    constr: 0.05
+  NDAQ.OQ:
+    constr: 0.05
+  FFIV.OQ:
+    constr: 0.05
+  LEN.N:
+    constr: 0.05
+  CDNS.OQ:
+    constr: 0.05
+  NVDA.OQ:
+    constr: 0.05
+  WELL.N:
+    constr: 0.05
+  PLD.N:
+    constr: 0.05
+  ROST.OQ:
+    constr: 0.05
+  MRK.N:
+    constr: 0.05
+  WEC.N:
+    constr: 0.05
+  MSCI.N:
+    constr: 0.05
+  TMO.N:
+    constr: 0.05
+  F.N:
+    constr: 0.05
+  GEHC.OQ:
+    constr: 0.05
+  LYB.N:
+    constr: 0.05
+  IBM.N:
+    constr: 0.05
+  IQV.N:
+    constr: 0.05
+  VRTX.OQ:
+    constr: 0.05
+  DXCM.OQ:
+    constr: 0.05
+  PEP.OQ:
+    constr: 0.05
+  AOS.N:
+    constr: 0.05
+  BLK.N:
+    constr: 0.05
+  HII.N:
+    constr: 0.05
+  CVS.N:
+    constr: 0.05
+  PH.N:
+    constr: 0.05
+  NSC.N:
+    constr: 0.05
+  MSFT.OQ:
+    constr: 0.05
+  HWM.N:
+    constr: 0.05
+  BAX.N:
+    constr: 0.05
+  HUM.N:
+    constr: 0.05
+  AXON.OQ:
+    constr: 0.05
+  ZBH.N:
+    constr: 0.05
+  TDY.N:
+    constr: 0.05
+  GILD.OQ:
+    constr: 0.05
+  EPAM.N:
+    constr: 0.05
+  CMA.N:
+    constr: 0.05
+  NOC.N:
+    constr: 0.05
+  PNW.N:
+    constr: 0.05
+  BFb.N:
+    constr: 0.05
+  DE.N:
+    constr: 0.05
+  HSY.N:
+    constr: 0.05
+  GL.N:
+    constr: 0.05
+  SLB.N:
+    constr: 0.05
+  AWK.N:
+    constr: 0.05
+  PKG.N:
+    constr: 0.05
+  CPAY.N:
+    constr: 0.05
+  ADI.OQ:
+    constr: 0.05
+  MMC.N:
+    constr: 0.05
+  IT.N:
+    constr: 0.05
+  ECL.N:
+    constr: 0.05
+  BXP.N:
+    constr: 0.05
+  GE.N:
+    constr: 0.05
+  ED.N:
+    constr: 0.05
+  ALLE.N:
+    constr: 0.05
+  OTIS.N:
+    constr: 0.05
+  WFC.N:
+    constr: 0.05
+  CTVA.N:
+    constr: 0.05
+  FTV.N:
+    constr: 0.05
+  AEE.N:
+    constr: 0.05
+  PRU.N:
+    constr: 0.05
+  DLTR.OQ:
+    constr: 0.05
+  CF.N:
+    constr: 0.05
+  NEE.N:
+    constr: 0.05
+  FMC.N:
+    constr: 0.05
+  ILMN.OQ:
+    constr: 0.05
+  KLAC.OQ:
+    constr: 0.05
+  AME.N:
+    constr: 0.05
+  NUE.N:
+    constr: 0.05
+  D.N:
+    constr: 0.05
+  SJM.N:
+    constr: 0.05
+  EMR.N:
+    constr: 0.05
+  DVA.N:
+    constr: 0.05
+  CMS.N:
+    constr: 0.05
+  HPE.N:
+    constr: 0.05
+  RHI.N:
+    constr: 0.05
+  BDX.N:
+    constr: 0.05
+  MGM.N:
+    constr: 0.05
+  HUBB.N:
+    constr: 0.05
+  ALGN.OQ:
+    constr: 0.05
+  SRE.N:
+    constr: 0.05
+  REGN.OQ:
+    constr: 0.05
+  EFX.N:
+    constr: 0.05
+  USB.N:
+    constr: 0.05
+  CSGP.OQ:
+    constr: 0.05
+  HCA.N:
+    constr: 0.05
+  AVGO.OQ:
+    constr: 0.05
+  DHR.N:
+    constr: 0.05
+  NWSA.OQ:
+    constr: 0.05
+  RTX.N:
+    constr: 0.05
+  AAPL.OQ:
+    constr: 0.05
+  CME.OQ:
+    constr: 0.05
+  MRO.N:
+    constr: 0.05
+  ADM.N:
+    constr: 0.05
+  APD.N:
+    constr: 0.05
+  FANG.OQ:
+    constr: 0.05
+  WRB.N:
+    constr: 0.05
+  AXP.N:
+    constr: 0.05
+  CLX.N:
+    constr: 0.05
+  DOV.N:
+    constr: 0.05
+  FSLR.OQ:
+    constr: 0.05
+  MTB.N:
+    constr: 0.05
+  FDX.N:
+    constr: 0.05
+  TROW.OQ:
+    constr: 0.05
+  JKHY.OQ:
+    constr: 0.05
+  O.N:
+    constr: 0.05
+  MLM.N:
+    constr: 0.05
+  RVTY.N:
+    constr: 0.05
+  L.N:
+    constr: 0.05
+  QCOM.OQ:
+    constr: 0.05
+  IPG.N:
+    constr: 0.05
+  PHM.N:
+    constr: 0.05
+  ANSS.OQ:
+    constr: 0.05
+  ULTA.OQ:
+    constr: 0.05
+  KO.N:
+    constr: 0.05
+  CSCO.OQ:
+    constr: 0.05
+  WTW.OQ:
+    constr: 0.05
+  ANET.N:
+    constr: 0.05
+  ES.N:
+    constr: 0.05
+  CTAS.OQ:
+    constr: 0.05
+  GPN.N:
+    constr: 0.05
+  RSG.N:
+    constr: 0.05
+  LIN.OQ:
+    constr: 0.05
+  MCK.N:
+    constr: 0.05
+  HLT.N:
+    constr: 0.05
+  NFLX.OQ:
+    constr: 0.05
+  FI.N:
+    constr: 0.05
+  RF.N:
+    constr: 0.05
+  WMT.N:
+    constr: 0.05
+  AMGN.OQ:
+    constr: 0.05
+  KIM.N:
+    constr: 0.05
+  PXD.N:
+    constr: 0.05
+  DG.N:
+    constr: 0.05
+  EQR.N:
+    constr: 0.05
+  URI.N:
+    constr: 0.05
+  TDG.N:
+    constr: 0.05
+  CNC.N:
+    constr: 0.05
+  NKE.N:
+    constr: 0.05
+  AES.N:
+    constr: 0.05
+  ELV.N:
+    constr: 0.05
+  GWW.N:
+    constr: 0.05
+  K.N:
+    constr: 0.05
+  GOOGL.OQ:
+    constr: 0.05
+  GM.N:
+    constr: 0.05
+  CCI.N:
+    constr: 0.05
+  COF.N:
+    constr: 0.05
+  C.N:
+    constr: 0.05
+  ODFL.OQ:
+    constr: 0.05
+  A.N:
+    constr: 0.05
+  MOH.N:
+    constr: 0.05
+  GS.N:
+    constr: 0.05
+  MET.N:
+    constr: 0.05
+  WYNN.OQ:
+    constr: 0.05
+  PSA.N:
+    constr: 0.05
+  CPT.N:
+    constr: 0.05
+  MRNA.OQ:
+    constr: 0.05
+  BK.N:
+    constr: 0.05
+  FAST.OQ:
+    constr: 0.05
+  LDOS.N:
+    constr: 0.05
+  ORLY.OQ:
+    constr: 0.05
+  CSX.OQ:
+    constr: 0.05
+  CFG.N:
+    constr: 0.05
+  NI.N:
+    constr: 0.05
+  MO.N:
+    constr: 0.05
+  DD.N:
+    constr: 0.05
+  AEP.OQ:
+    constr: 0.05
+  HOLX.OQ:
+    constr: 0.05
+  BX.N:
+    constr: 0.05
+  BBY.N:
+    constr: 0.05
+  LHX.N:
+    constr: 0.05
+  APA.OQ:
+    constr: 0.05
+  IFF.N:
+    constr: 0.05
+  CEG.OQ:
+    constr: 0.05
+  STT.N:
+    constr: 0.05
+  JCI.N:
+    constr: 0.05
+  FE.N:
+    constr: 0.05
+  PNC.N:
+    constr: 0.05
+  VZ.N:
+    constr: 0.05
+  NEM.N:
+    constr: 0.05
+  ROL.N:
+    constr: 0.05
+  KEY.N:
+    constr: 0.05
+  GIS.N:
+    constr: 0.05
+  CMCSA.OQ:
+    constr: 0.05
+  VLTO.N:
+    constr: 0.05
+  PFE.N:
+    constr: 0.05
+  EIX.N:
+    constr: 0.05
+  NWS.OQ:
+    constr: 0.05
+  MU.OQ:
+    constr: 0.05
+  UPS.N:
+    constr: 0.05
+  SOLV.N:
+    constr: 0.05
+  TYL.N:
+    constr: 0.05
+  UNP.N:
+    constr: 0.05
+  BAC.N:
+    constr: 0.05
+  KMX.N:
+    constr: 0.05
+  PARA.OQ:
+    constr: 0.05
+  IP.N:
+    constr: 0.05
+  MDT.N:
+    constr: 0.05
+  MMM.N:
+    constr: 0.05
+  CZR.OQ:
+    constr: 0.05
+  UBER.N:
+    constr: 0.05
+  INTU.OQ:
+    constr: 0.05
+  OKE.N:
+    constr: 0.05
+  ADP.OQ:
+    constr: 0.05
+  EQIX.OQ:
+    constr: 0.05
+  CHD.N:
+    constr: 0.05
+  MTD.N:
+    constr: 0.05
+  KDP.OQ:
+    constr: 0.05
+  EBAY.OQ:
+    constr: 0.05
+  PEG.N:
+    constr: 0.05
+  BIIB.OQ:
+    constr: 0.05
+  CTSH.OQ:
+    constr: 0.05
+  ALB.N:
+    constr: 0.05
+  TRGP.N:
+    constr: 0.05
+  NCLH.N:
+    constr: 0.05
+  UDR.N:
+    constr: 0.05
+  DGX.N:
+    constr: 0.05
+  CBOE.Z:
+    constr: 0.05
+  ETSY.OQ:
+    constr: 0.05
+  HIG.N:
+    constr: 0.05
+  ACGL.OQ:
+    constr: 0.05
+  NDSN.OQ:
+    constr: 0.05
+  VRSK.OQ:
+    constr: 0.05
+  GEV.N:
+    constr: 0.05
+  AMT.N:
+    constr: 0.05
+  PYPL.OQ:
+    constr: 0.05
+  CAG.N:
+    constr: 0.05
+  UHS.N:
+    constr: 0.05
+  TFX.N:
+    constr: 0.05
+  SYF.N:
+    constr: 0.05
+  WAT.N:
+    constr: 0.05
+  INCY.OQ:
+    constr: 0.05
+  LRCX.OQ:
+    constr: 0.05
+  IDXX.OQ:
+    constr: 0.05
+  PPG.N:
+    constr: 0.05
+  LKQ.OQ:
+    constr: 0.05
+  BG.N:
+    constr: 0.05
+  HES.N:
+    constr: 0.05
+  EOG.N:
+    constr: 0.05
+  MAR.OQ:
+    constr: 0.05
+  TJX.N:
+    constr: 0.05
+  MNST.OQ:
+    constr: 0.05
+  VMC.N:
+    constr: 0.05
+  EW.N:
+    constr: 0.05
+  ALL.N:
+    constr: 0.05
+  BMY.N:
+    constr: 0.05
+  APH.N:
+    constr: 0.05
+  HON.OQ:
+    constr: 0.05
+  GPC.N:
+    constr: 0.05
+  MHK.N:
+    constr: 0.05
+  MCHP.OQ:
+    constr: 0.05
+  CAT.N:
+    constr: 0.05
+  PG.N:
+    constr: 0.05
+  ZTS.N:
+    constr: 0.05
+  STE.N:
+    constr: 0.05
+  BKR.OQ:
+    constr: 0.05
+  AFL.N:
+    constr: 0.05
+  CPB.N:
+    constr: 0.05
+  PTC.OQ:
+    constr: 0.05
+  FITB.OQ:
+    constr: 0.05
+  MSI.N:
+    constr: 0.05
+  XEL.OQ:
+    constr: 0.05
+  HSIC.OQ:
+    constr: 0.05
+  ITW.N:
+    constr: 0.05
+  WST.N:
+    constr: 0.05
+  DFS.N:
+    constr: 0.05
+  APTV.N:
+    constr: 0.05
+  MPC.N:
+    constr: 0.05
+  PGR.N:
+    constr: 0.05
+  ICE.N:
+    constr: 0.05
+  KMB.N:
+    constr: 0.05
+  SWKS.OQ:
+    constr: 0.05
+  ABNB.OQ:
+    constr: 0.05
+  EL.N:
+    constr: 0.05
+  TSLA.OQ:
+    constr: 0.05
+  EXR.N:
+    constr: 0.05
+  SPGI.N:
+    constr: 0.05
+  ADBE.OQ:
+    constr: 0.05
+  ADSK.OQ:
+    constr: 0.05
+  WRK.N:
+    constr: 0.05
+  FOXA.OQ:
+    constr: 0.05
+  TT.N:
+    constr: 0.05
+  TSN.N:
+    constr: 0.05
+  AKAM.OQ:
+    constr: 0.05
+  LUV.N:
+    constr: 0.05
+  INVH.N:
+    constr: 0.05
+  TSCO.OQ:
+    constr: 0.05
+  AON.N:
+    constr: 0.05
+  AMZN.OQ:
+    constr: 0.05
+  MS.N:
+    constr: 0.05
+  BRKb.N:
+    constr: 0.05
+  GOOG.OQ:
+    constr: 0.05
+  KR.N:
+    constr: 0.05
+  BKNG.OQ:
+    constr: 0.05
+  STZ.N:
+    constr: 0.05
+  WBD.OQ:
+    constr: 0.05
+  ABBV.N:
+    constr: 0.05
+  STLD.OQ:
+    constr: 0.05
+  MA.N:
+    constr: 0.05
+  XOM.N:
+    constr: 0.05
+  SWK.N:
+    constr: 0.05
+  FICO.N:
+    constr: 0.05
+  HRL.N:
+    constr: 0.05
+  INTC.OQ:
+    constr: 0.05
+  TRMB.OQ:
+    constr: 0.05
+  WBA.OQ:
+    constr: 0.05
+  OMC.N:
+    constr: 0.05
+  GLW.N:
+    constr: 0.05
+  CRM.N:
+    constr: 0.05
+  SBUX.OQ:
+    constr: 0.05
+  ATO.N:
+    constr: 0.05
+  ETR.N:
+    constr: 0.05
+  HAL.N:
+    constr: 0.05
+  TFC.N:
+    constr: 0.05
+  TAP.N:
+    constr: 0.05
+  ABT.N:
+    constr: 0.05
+  V.N:
+    constr: 0.05
+  YUM.N:
+    constr: 0.05
+  LYV.N:
+    constr: 0.05
+  JNPR.N:
+    constr: 0.05
+  EG.N:
+    constr: 0.05
+  FTNT.OQ:
+    constr: 0.05
+  DTE.N:
+    constr: 0.05
+  HST.OQ:
+    constr: 0.05
+  IRM.N:
+    constr: 0.05
+  DOC.N:
+    constr: 0.05
+  FIS.N:
+    constr: 0.05
+  DAL.N:
+    constr: 0.05
+  ROK.N:
+    constr: 0.05
+  DOW.N:
+    constr: 0.05
+  PPL.N:
+    constr: 0.05
+  NTRS.OQ:
+    constr: 0.05
+  ETN.N:
+    constr: 0.05
+  CVX.N:
+    constr: 0.05
+  CI.N:
+    constr: 0.05
+  ACN.N:
+    constr: 0.05
+  PANW.OQ:
+    constr: 0.05
+  XYL.N:
+    constr: 0.05
+  HAS.OQ:
+    constr: 0.05
+  ENPH.OQ:
+    constr: 0.05
+  SO.N:
+    constr: 0.05
+  CTLT.N:
+    constr: 0.05
+  EQT.N:
+    constr: 0.05
+  NRG.N:
+    constr: 0.05
+  MKTX.OQ:
+    constr: 0.05
+  LMT.N:
+    constr: 0.05
+  DLR.N:
+    constr: 0.05
+  PSX.N:
+    constr: 0.05
+  SCHW.N:
+    constr: 0.05
+  SNPS.OQ:
+    constr: 0.05
+  J.N:
+    constr: 0.05
+  AVY.N:
+    constr: 0.05
+  GILD.OQ:
+    constr: 0.05
+  TTD.OQ:
+    constr: 0.05
+  PAYX.OQ:
+    constr: 0.05
+  KHC.OQ:
+    constr: 0.05
+  BIIB.OQ:
+    constr: 0.05
+  MDB.OQ:
+    constr: 0.05
+  HON.OQ:
+    constr: 0.05
+  AZN.OQ:
+    constr: 0.05
+  CSCO.OQ:
+    constr: 0.05
+  DASH.OQ:
+    constr: 0.05
+  CTAS.OQ:
+    constr: 0.05
+  FAST.OQ:
+    constr: 0.05
+  FANG.OQ:
+    constr: 0.05
+  LRCX.OQ:
+    constr: 0.05
+  FTNT.OQ:
+    constr: 0.05
+  QCOM.OQ:
+    constr: 0.05
+  WBD.OQ:
+    constr: 0.05
+  CHTR.OQ:
+    constr: 0.05
+  CDNS.OQ:
+    constr: 0.05
+  IDXX.OQ:
+    constr: 0.05
+  DLTR.OQ:
+    constr: 0.05
+  TEAM.OQ:
+    constr: 0.05
+  ADBE.OQ:
+    constr: 0.05
+  REGN.OQ:
+    constr: 0.05
+  XEL.OQ:
+    constr: 0.05
+  ISRG.OQ:
+    constr: 0.05
+  NFLX.OQ:
+    constr: 0.05
+  WDAY.OQ:
+    constr: 0.05
+  EA.OQ:
+    constr: 0.05
+  MCHP.OQ:
+    constr: 0.05
+  MAR.OQ:
+    constr: 0.05
+  SNPS.OQ:
+    constr: 0.05
+  ADSK.OQ:
+    constr: 0.05
+  MDLZ.OQ:
+    constr: 0.05
+  CCEP.OQ:
+    constr: 0.05
+  SBUX.OQ:
+    constr: 0.05
+  CMCSA.OQ:
+    constr: 0.05
+  PCAR.OQ:
+    constr: 0.05
+  INTC.OQ:
+    constr: 0.05
+  AAPL.OQ:
+    constr: 0.05
+  TMUS.OQ:
+    constr: 0.05
+  MRVL.OQ:
+    constr: 0.05
+  ANSS.OQ:
+    constr: 0.05
+  ORLY.OQ:
+    constr: 0.05
+  PDD.OQ:
+    constr: 0.05
+  BKNG.OQ:
+    constr: 0.05
+  EXC.OQ:
+    constr: 0.05
+  ILMN.OQ:
+    constr: 0.05
+  ADI.OQ:
+    constr: 0.05
+  GOOG.OQ:
+    constr: 0.05
+  GEHC.OQ:
+    constr: 0.05
+  MELI.OQ:
+    constr: 0.05
+  INTU.OQ:
+    constr: 0.05
+  ON.OQ:
+    constr: 0.05
+  TXN.OQ:
+    constr: 0.05
+  LULU.OQ:
+    constr: 0.05
+  GFS.OQ:
+    constr: 0.05
+  CRWD.OQ:
+    constr: 0.05
+  PEP.OQ:
+    constr: 0.05
+  CTSH.OQ:
+    constr: 0.05
+  KLAC.OQ:
+    constr: 0.05
+  WBA.OQ:
+    constr: 0.05
+  NVDA.OQ:
+    constr: 0.05
+  MSFT.OQ:
+    constr: 0.05
+  NXPI.OQ:
+    constr: 0.05
+  MU.OQ:
+    constr: 0.05
+  DDOG.OQ:
+    constr: 0.05
+  DXCM.OQ:
+    constr: 0.05
+  KDP.OQ:
+    constr: 0.05
+  AMGN.OQ:
+    constr: 0.05
+  ZS.OQ:
+    constr: 0.05
+  CSGP.OQ:
+    constr: 0.05
+  AEP.OQ:
+    constr: 0.05
+  META.OQ:
+    constr: 0.05
+  SIRI.OQ:
+    constr: 0.05
+  ASML.OQ:
+    constr: 0.05
+  ROP.OQ:
+    constr: 0.05
+  ODFL.OQ:
+    constr: 0.05
+  AMD.OQ:
+    constr: 0.05
+  CEG.OQ:
+    constr: 0.05
+  TSLA.OQ:
+    constr: 0.05
+  PANW.OQ:
+    constr: 0.05
+  ABNB.OQ:
+    constr: 0.05
+  CPRT.OQ:
+    constr: 0.05
+  BKR.OQ:
+    constr: 0.05
+  LIN.OQ:
+    constr: 0.05
+  CDW.OQ:
+    constr: 0.05
+  MNST.OQ:
+    constr: 0.05
+  ADP.OQ:
+    constr: 0.05
+  AVGO.OQ:
+    constr: 0.05
+  CSX.OQ:
+    constr: 0.05
+  PYPL.OQ:
+    constr: 0.05
+  COST.OQ:
+    constr: 0.05
+  GOOGL.OQ:
+    constr: 0.05
+  AMAT.OQ:
+    constr: 0.05
+  MRNA.OQ:
+    constr: 0.05
+  ROST.OQ:
+    constr: 0.05
+  VRSK.OQ:
+    constr: 0.05
+  AMZN.OQ:
+    constr: 0.05
+  TTWO.OQ:
+    constr: 0.05
+  VRTX.OQ:
+    constr: 0.05
+  GS.N:
+    constr: 0.05
+  NKE.N:
+    constr: 0.05
+  CSCO.OQ:
+    constr: 0.05
+  JPM.N:
+    constr: 0.05
+  DIS.N:
+    constr: 0.05
+  INTC.OQ:
+    constr: 0.05
+  DOW.N:
+    constr: 0.05
+  MRK.N:
+    constr: 0.05
+  CVX.N:
+    constr: 0.05
+  AXP.N:
+    constr: 0.05
+  VZ.N:
+    constr: 0.05
+  HD.N:
+    constr: 0.05
+  MCD.N:
+    constr: 0.05
+  UNH.N:
+    constr: 0.05
+  AMZN.OQ:
+    constr: 0.05
+  KO.N:
+    constr: 0.05
+  JNJ.N:
+    constr: 0.05
+  MSFT.OQ:
+    constr: 0.05
+  HON.OQ:
+    constr: 0.05
+  CRM.N:
+    constr: 0.05
+  PG.N:
+    constr: 0.05
+  IBM.N:
+    constr: 0.05
+  MMM.N:
+    constr: 0.05
+  AAPL.OQ:
+    constr: 0.05
+  WMT.N:
+    constr: 0.05
+  CAT.N:
+    constr: 0.05
+  AMGN.OQ:
+    constr: 0.05
+  V.N:
+    constr: 0.05
+  TRV.N:
+    constr: 0.05
+  BA.N:
+    constr: 0.05
+MODEL:
+  hybrid: False
+  main_factors:
+    PCA: 3
+  secondary_factors: []
+  regression_method: robust
+  pca_method: ordinary
+  opt_function: sortino
+  quantile: 0.05
+  reg_lambda: 0.2
+
+CONSTRAINTS:
+  allow_short_selling: True
+  allow_leverage: False
+
+PATHS:
+  save_path_diagnostics: C:\Users\serge\OneDrive\Documents\IntelliJ IDEA Projects\portfolio_management\notebooks\results\diagnostics
+
+

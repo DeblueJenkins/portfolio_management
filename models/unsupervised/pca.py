@@ -131,7 +131,10 @@ class PcaHandler(PcaBaseClass):
         if self.method == 'svd':
 
             # this is diagonal rectangular
-            l = np.concatenate([np.diag(self.singular_values), np.zeros([self.n, self.m-self.n])], axis=1)
+            if self.m > self.n:
+                l = np.concatenate([np.diag(self.singular_values), np.zeros([self.n, self.m-self.n])], axis=1)
+            else:
+                l = np.concatenate([np.diag(self.singular_values), np.zeros([self.n-self.m, self.m])], axis=0)
             l = l.T.dot(l)
             self.cov_pca = np.linalg.multi_dot([self.eig_vecs, l, self.eig_vecs.T]) / (self.n - 1)
         else:

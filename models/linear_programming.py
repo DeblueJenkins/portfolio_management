@@ -168,14 +168,3 @@ class LinearFactorModel(AbstractModel):
     def _get_portfolio_simple_return(self, y, weights):
         portfolio_returns = np.multiply(weights, y)
         self.mean_sample = np.mean(portfolio_returns)
-
-class HybridFactorModel(LinearFactorModel):
-    pass
-    '# this will do two-step estimation'
-
-
-
-class Optimizer:
-
-    def __init__(self):
-        pass
