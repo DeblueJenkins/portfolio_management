@@ -160,7 +160,7 @@ CONSTRAINTS:
   allow_leverage: False
 
 PATHS:
-  save_path_diagnostics: C:\Users\serge\OneDrive\Documents\IntelliJ IDEA Projects\portfolio_management\notebooks\examples\results\diagnostics
-  load_path_asset_universe: C:\\Users\\serge\\OneDrive\\Documents\\IntelliJ IDEA Projects\\portfolio_management\\models\\data\asset_universe.csv
+  save_path_diagnostics: C:\Users\serge\IdeaProjects\portfolio_management\notebooks\examples\results\diagnostics
+  load_path_asset_universe: C:\Users\serge\IdeaProjects\portfolio_management\models\data\asset_universe.csv
 
 

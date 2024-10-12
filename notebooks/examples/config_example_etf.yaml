@@ -1,0 +1,44 @@
+HORIZON:
+  14
+ASSETS:
+  .ATX # Austria
+  .FCHI # France
+  .GDAXI # Germany
+  .BFX # Belgium
+  .CRBEX # Croatia
+  .BUX # Hungary
+  .WIG20 # Poland
+  .IBEX # Spain
+  .SETI # Thailand
+  .STI # Singapore
+  .KLSE # Malaysia
+  .NSEI # India
+  .HSI # Hong-Kong
+  .EGX30 # Egypt
+  .JSEJ.J # South Africa
+
+
+
+MODEL:
+  hybrid: False
+  main_factors:
+    PCA: 3
+  secondary_factors: []
+  regression_method: robust
+  pca_parameters:
+    pca_method: ordinary
+    method: svd
+    covariance_estimate:
+  opt_function: sortino
+  quantile: 0.05
+  reg_lambda: 0.2
+
+CONSTRAINTS:
+  allow_short_selling: True
+  allow_leverage: False
+
+PATHS:
+  save_path_diagnostics: C:\Users\serge\IdeaProjects\portfolio_management\notebooks\examples\results\diagnostics
+  load_path_asset_universe: C:\Users\serge\IdeaProjects\portfolio_management\models\data\asset_universe.csv
+
+

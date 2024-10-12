@@ -9,7 +9,6 @@ import eikon as ek
 import datetime as dt
 import os
 import numpy as np
-import pandas as pd
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -43,16 +42,47 @@ class APIError(Exception):
     def __str__(self):
         return "APIError: status={}".format(self.msg)
 
+def _wrap_dt_parser(x):
+    return dt.datetime.strptime(x, '%Y%m%d')
 
 class FamaFrenchData:
 
     USE_COLS_MAPPER = {
         'Developed_5_Factors_Daily':
-            {'factors': ['Mkt-RF', 'SMB', 'HML', 'CMA', 'RF'],
-             'use_cols': ['B', 'C', 'D', 'E', 'F', 'G']},
+            {
+                'factors': ['Mkt-RF', 'SMB', 'HML', 'CMA', 'RF'],
+                'read_csv_params': {
+                    'skiprows': 3,
+                    'index_col': 0,
+                },
+            },
          'Developed_MOM_Factor_Daily':
-             {'factors': ['WML'],
-              'use_cols': ['B']}
+             {
+                'factors': ['WML'],
+                 'read_csv_params': {
+                     'skiprows': 3,
+                     'index_col': 0
+                 },
+             },
+        'F-F_Research_Data_5_Factors_2x3_daily':
+            {
+                'factors': ['Mkt-RF','SMB','HML','RMW','CMA','RF'],
+                'read_csv_params': {
+                    'skiprows': 3,
+                    'index_col': 0
+                },
+            },
+        '5_Industry_Portfolios_Daily':
+            {
+                'factors': ['Cnsmr','Manuf','HiTec','Hlth','Other'],
+                'read_csv_params': {
+                    'skiprows': 9,
+                    'index_col': 0,
+                    # 'skipfooter': 1,
+                    'nrows': 25795,
+                    'date_parser': _wrap_dt_parser
+                }
+            }
     }
 
     def __init__(self, path_to_input_folder: str,
@@ -69,23 +99,28 @@ class FamaFrenchData:
         # index must be date col
         self._load_files()
         self._transform_files()
+        self._set_date_index()
+
+    def _set_date_index(self):
+
+        self.data.index = self.data.index.astype(str)
 
     def _load_files(self):
         self.factor_names = []
         self._data = {}
         self._size = {}
+        self.factor_names = []
         for i, f in enumerate(self.filenames):
-            header_row = 2
-            index_row = 0
-            use_cols = FamaFrenchData.USE_COLS_MAPPER[f]['use_cols']
+            kwargs = FamaFrenchData.USE_COLS_MAPPER[f]['read_csv_params']
             factor_names = FamaFrenchData.USE_COLS_MAPPER[f]['factors']
             df_factors = pd.read_csv(filepath_or_buffer=fr'{self.path}\\{f}.csv',
-                                     header=header_row,
-                                     index_col=index_row,
+                                     **kwargs,
                                      parse_dates=True)
             if len(factor_names) > 1:
                 for fac in factor_names:
                     self._data[fac] = df_factors.loc[:, fac]
+                    self._data[fac].dropna(inplace=True)
+                    # self._data[fac] = self._repair_empty_spaced_col(self._data[fac])
                     self._data[fac] = self._data[fac].replace({-99.99:np.nan}) / 100
                     self._size[fac] = len(self._data[fac])
                     self.factor_names.append(fac)
@@ -93,9 +128,29 @@ class FamaFrenchData:
                 self._data[factor_names[0]] = df_factors.replace({-99.99:np.nan}) / 100
                 self.factor_names.append(factor_names[0])
 
+    def _convert_index_to_timestamp(self):
+        for fac in self.factor_names:
+            self._data[fac].index = self._data[fac].apply
+
+
+    def _repair_empty_spaced_col(self, df):
+        def _repair_func(x):
+            if isinstance(x, str):
+                if x is None:
+                    return np.nan
+                else:
+                    return float(x.replace(' ',''))
+
+        df = df.apply(_repair_func)
+        return df
+
     def _transform_files(self):
         if hasattr(self, '_data'):
             max_size_key = max(self._size, key=self._size.get)
+            # find which df is the largest, so that we start with that
+            # one, also remove it and put it at first place (to start the merging with it)
+            self.factor_names.remove(max_size_key)
+            self.factor_names.insert(0, max_size_key)
             for i, fac in enumerate(self.factor_names):
                 if i == 0:
                     df = self._data[max_size_key]
@@ -117,10 +172,18 @@ class Eikon:
 
         self.api = ek
 
+    def _parse_date_field(self, df: pd.DataFrame, date_field: str, date_field_alias: str = 'Calc Date'):
+
+        df.loc[:, date_field] = df.loc[:, date_field_alias].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d'))
+        df.loc[:, 'Month'] = df.loc[:, date_field].apply(lambda x: x.month)
+        df.loc[:, 'Year'] = df.loc[:, date_field].apply(lambda x: x.year)
+
+        return df
+
     def download_timeseries(self, rics: list, field: list = ['TR.PriceClose', 'Price Close'],
                             date_field: list = ['TR.PriceClose.calcdate', 'Calc Date'], params: dict = None,
                             save_config: dict = {'save': True, 'path': r'C:\Users\serge\IdeaProjects\portfolio_management\models\data\csv' },
-                            out: bool = True):
+                            out: bool = True, set_as_data_data_attribute: bool = True, overwrite: bool = False):
 
         ## There should be a class attribute name mapper between TR.fields and their corresponding column names
         ## s.t. data_field and field don't have to be lists
@@ -129,13 +192,23 @@ class Eikon:
             raise AttributeError('rics parameter must be list, if it is single RIC, convert to list first')
         data_dict = {}
         for ric in rics:
-            try:
-                print(ric)
-                data_dict[ric] = ek.get_data(ric, [field[0], date_field[0]], parameters=params)[0]
-                data_dict[ric].loc[:, date_field[0]] = data_dict[ric].loc[:, date_field[1]].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d'))
-                data_dict[ric].loc[:, 'Month'] = data_dict[ric].loc[:, date_field[0]].apply(lambda x: x.month)
-                data_dict[ric].loc[:, 'Year'] = data_dict[ric].loc[:, date_field[0]].apply(lambda x: x.year)
+            print(ric)
+            _ric_exists = None
+            fname = f'{ric}.csv'
+            _files = os.listdir(save_config['path'])
+            if fname in _files:
+                print('CSV File Found')
+                if overwrite:
+                    print('Overwriting')
+                    pass
+                else:
+                    continue
 
+            try:
+                print('CSV File Not Found, Downloading')
+                data_dict[ric] = ek.get_data(ric, [field[0], date_field[0]], parameters=params)[0]
+                data_dict[ric] = self._parse_date_field(data_dict[ric], date_field=date_field[0], date_field_alias=date_field[1])
+                print(f"Percentage of NaN values: {np.round(100 * data_dict[ric].isna().sum() / len(data_dict[ric]), 2)}")
                 if save_config['save']:
                     data_dict[ric].to_csv(f"{save_config['path']}\{ric}.csv")
                     print(f"Saved: {save_config['path']}\{ric}.csv")
@@ -143,9 +216,12 @@ class Eikon:
                 print('Exception occurred')
                 print(e)
 
-            #         self.data = pd.DataFrame.from_dict(data_dict, orient='index')
-        self.data_dict = data_dict
-        self._merge_individual_timeseries(field, date_field)
+        data = self._merge_individual_timeseries(data_dict,field[1], date_field[1])
+        if set_as_data_data_attribute:
+            self.data_dict = data_dict
+            self.data = data
+        if out:
+            return self.data.copy()
 
 
     def load_timeseries(self, rics: list, load_path: str, field: list = ['TR.PriceClose', 'Price Close'],
@@ -158,30 +234,31 @@ class Eikon:
             except Exception as e:
                 print(e)
         self.data_dict = data_dict
-        self._merge_individual_timeseries(field, date_field)
+        self.data = self._merge_individual_timeseries(data_dict,field[1], date_field[1])
         if out:
             return self.data.copy()
-    def _merge_individual_timeseries(self, field: str = ['TR.PriceClose', 'Price Close'],
-                                     date_field: str = ['TR.PriceClose.calcdata', 'Calc Date']):
-            if hasattr(self, 'data_dict'):
 
-                    for i, (ric, df) in enumerate(self.data_dict.items()):
-                        try:
-                            if i == 0:
-                                df_all = df.rename(columns={field[1]: ric})
-                                df_all = df_all[[date_field[1], ric]]
-                            else:
-                                df = df.rename(columns={field[1]: ric})
-                                df = df[[ric, date_field[1]]]
-                                df_all = pd.merge(df_all, df, on=date_field[1], how='left')
-                        except Exception as e:
-                            print(f'Exception for {ric}: {repr(e)}')
+    def _merge_individual_timeseries(self, data_dict, field_alias: str = 'Price Close',
+                                     date_field_alias: str = 'Calc Date'):
 
-                        # print(df_all.count())
-                        self.data = df_all
+        # first one
+        first_ric = list(data_dict.keys())[0]
+        _df1 = list(data_dict.values())[0]
+        df_all = _df1.rename(columns={field_alias: first_ric})
+        df_all = df_all[[date_field_alias, first_ric]]
 
-            else:
-                raise UserWarning('User must firstly either download or load the timeseries of choice')
+        for i, (ric, df) in enumerate(data_dict.items()):
+            try:
+                if i > 0:
+                    df = df.rename(columns={field_alias: ric})
+                    df = df[[ric, date_field_alias]]
+                    df_all = pd.merge(df_all, df, on=date_field_alias, how='left')
+            except Exception as e:
+                print(f'Exception for {ric}: {repr(e)}')
+
+            # print(df_all.count())
+        return df_all
+
 
     def get_index_constituents(self, index: str = '.SPX', date: str = '20230321'):
 
@@ -207,6 +284,43 @@ class Eikon:
                 all_rics.append(temp_rics['Constituent RIC'].to_list())
 
         return all_rics[0]
+
+
+    def download_fixed_time_drivers(self, rics: list, save_path: str,
+                                    fields: dict = {'GICS Sector Name': 'TR.GICSSector',
+                                                    'Country of Headquarters': 'TR.HeadquartersCountry'},
+                                    out: bool = True):
+
+        if not isinstance(rics, list):
+            raise AttributeError('rics parameter must be list, if it is single RIC, convert to list first')
+
+        try:
+            _request = self.api.get_data(rics, list(fields.values()))
+            self.data_fixed = _request[0]
+            self.data_fixed.set_index('Instrument', inplace=True)
+            _msg = _request[1]
+            print(_msg)
+        except Exception as e:
+            print(e)
+
+
+
+        self.data_fixed.to_csv(f'{save_path}')
+
+        if out:
+            return self.data_fixed
+
+    def load_fixed_time_drivers(self, rics: list, load_path: str, fields: list = ['GICS Sector Name', 'Country of Headquarters'],
+                                out: bool = False):
+
+        self.data_fixed = pd.read_csv(f'{load_path}')
+        self.data_fixed.set_index('Instrument', inplace=True)
+        self.data_fixed = self.data_fixed.loc[rics, fields]
+        if out:
+            return self.data_fixed
+
+
+
 
 
 class EikonIndustryRegionClassifier(Eikon):
