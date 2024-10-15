@@ -55,7 +55,8 @@ params = {
     'load_path': r'C:\Users\serge\IdeaProjects\portfolio_management\models\data\csv\fixed_factors\industry.csv',
 }
 
-data_industry = api.load_fixed_time_drivers(**params)
+data_industry = api.load_fixed_time_drivers(**params, out=True)
+
 
 
 returns = np.log(data / data.shift(1))
@@ -163,18 +164,19 @@ for t in np.arange(0, n-train_size-test_size, test_size):
 
     exposures = pd.DataFrame.from_dict(exposures)
     # this is the strategy now
-    cum_returns_factors = _data[['SMB', 'HML', 'CMA', 'WML']].sum()
-    best_performing_factor = _data.columns[np.argmax(cum_returns_factors)]
+    _cols_factors = ['SMB', 'HML', 'CMA', 'WML']
+    cum_returns_factors = 1 - (1 + _data[_cols_factors]).product()
+    best_performing_factor = _cols_factors[np.argmax(cum_returns_factors)]
     # find 10 most exposed and 10 least exposed
     exposures_best_performing = exposures.loc[best_performing_factor, :].sort_values()
     bottom_10 = exposures_best_performing.iloc[:10].index
     top_10 = exposures_best_performing.iloc[-10:].index
 
-    bottom_10_returns = returns_strategy.iloc[t+train_size:t+train_size+test_size, :][bottom_10].sum()
-    top_10_returns = returns_strategy.iloc[t+train_size:t+train_size+test_size, :][top_10].sum()
+    bottom_10_returns = 1 - (1 + returns_strategy.iloc[t+train_size:t+train_size+test_size, :][bottom_10]).product()
+    top_10_returns = 1 - (1+returns_strategy.iloc[t+train_size:t+train_size+test_size, :][top_10]).product()
 
 
-    my_portfolio = (top_10_returns / 10).sum() - (bottom_10_returns / 10).sum()
+    my_portfolio = - (top_10_returns / 10).sum() + (bottom_10_returns / 10).sum()
     strategy_returns[returns_strategy.index[t+train_size+test_size]] = my_portfolio
 
 
