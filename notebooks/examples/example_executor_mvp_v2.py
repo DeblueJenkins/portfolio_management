@@ -1,7 +1,7 @@
 import copy
 
 from portfolios.equity import EquityPortfolio
-from models.data.source import Eikon, load_fed_rates_from_excel
+from models.data.source import Eikon, load_fed_rates_from_excel, load_risk_free_from_ff_data
 from models.data.handler import DataHandler
 from pathlib import Path
 import os

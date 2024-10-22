@@ -146,7 +146,7 @@ MODEL:
   main_factors:
     PCA: 3
   secondary_factors: []
-  regression_method: robust
+  regression_method: ols
   pca_parameters:
     pca_method: ordinary
     method: svd

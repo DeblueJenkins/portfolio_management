@@ -14,31 +14,32 @@ import datetime as dt
 
 class Executor:
 
-    def __init__(self, start_date: str, end_date: str, path_data, path_api_keys):
+    def __init__(self, start_date: str, end_date: str, path_data, path_api_keys, path_config):
 
         self.path_api_keys = path_api_keys
         self.start_date = start_date
         self.end_date = end_date
         self.path_data = path_data
+        self.path_config = path_config
 
-        self.portfolio = EquityPortfolio(config_path='config_example.yaml')
+        self.portfolio = EquityPortfolio(config_path=path_config)
 
         self.params = {
             'rics': self.portfolio.asset_universe,
             'field': ['TR.PriceClose', 'Price Close'],
             'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
-            'load_path': os.path.join(self.path_data, 'csv')
+            'load_path': os.path.join(self.path_data, 'prices')
         }
 
         self.api = Eikon(self.path_api_keys)
 
     def _load_data(self):
 
-
         self.data = self.api.load_timeseries(**self.params)
         self.data = self.data[(self.data['Calc Date'] > self.start_date) & (self.data['Calc Date'] < self.end_date)]
 
-        self.rf = load_fed_rates_from_excel(fr"{PATH_DATA}\fed_rates\FEDRates21042024.csv")
+        self.rf = load_fed_rates_from_excel(fr"{self.path_data}\fed_rates\FEDRates21042024.csv")
+        # self.rf = load_risk_free_from_ff_data()
 
 
     def _preprocess(self):
@@ -77,7 +78,7 @@ class Executor:
     def _fit_factor_model(self):
 
         # since this takes portfolio, it can have the returns and factors in self
-        self.linear_model = LinearFactorModel(config_path='config_example.yaml',
+        self.linear_model = LinearFactorModel(config_path=self.path_config,
                                          portfolio=self.portfolio)
 
         self.linear_model.fit()
@@ -93,7 +94,7 @@ class Executor:
         self._preprocess()
         self._fit_factor_model()
 
-        optimizer = Optimizer(config_path='config_example.yaml',
+        optimizer = Optimizer(config_path=self.path_config,
                               model=self.linear_model,
                               portfolio=self.portfolio)
 

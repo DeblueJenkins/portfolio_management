@@ -67,13 +67,16 @@ class LinearFactorModel(AbstractModel):
         print(*((self.estimator.pvalues < 0.05).sum(axis=1) / len(self.assets)).round(2))
 
 
-
-
         # if this is not diagonal, it's an approximate factor model
 
-        self.factors = np.concatenate([[1], X[0,:]]) # this is the last factor in the time-series
+        # since this is a cross-sectional regression model
+        # we need the last PC factor in the time-series of PC factors
+        # in order to match the time-dimensions of the asset returns
+
+        self.factors = np.concatenate([[1], X[0,:]])
         self.factor_loadings = self.estimator.betas.copy()
         idx = np.isin(self.estimator.assets, self.portfolio.assets)
+        self.assets_estimated = self.estimator.assets[idx]
         idx = np.where(idx == True)[0]
         self.factor_loadings = self.factor_loadings[:, idx]
 

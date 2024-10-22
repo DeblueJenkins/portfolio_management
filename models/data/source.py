@@ -30,8 +30,14 @@ def load_fed_rates_from_excel(path):
     data.name = 'FedRate'
 
 
-
     return data
+
+def load_risk_free_from_ff_data(path):
+
+    data = pd.read_csv(path)
+
+
+
 
 class APIError(Exception):
     """An API Error Exception"""
