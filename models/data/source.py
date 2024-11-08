@@ -119,7 +119,7 @@ class FamaFrenchData:
         for i, f in enumerate(self.filenames):
             kwargs = FamaFrenchData.USE_COLS_MAPPER[f]['read_csv_params']
             factor_names = FamaFrenchData.USE_COLS_MAPPER[f]['factors']
-            df_factors = pd.read_csv(filepath_or_buffer=fr'{self.path}\\{f}.csv',
+            df_factors = pd.read_csv(filepath_or_buffer=f'{self.path}\\{f}.csv',
                                      **kwargs,
                                      parse_dates=True)
             if len(factor_names) > 1:
