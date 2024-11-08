@@ -9,6 +9,7 @@ from statsmodels.regression.linear_model import OLS
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import datetime as dt
 
 
 
@@ -40,7 +41,7 @@ def get_corr(X, col='y'):
     res = pd.DataFrame(index=sectors, columns=sectors, data=_res)
     return res
 
-def preprocess_design_matrix(returns, data_industry, ):
+def preprocess_design_matrix(returns, data_industry, gdp):
 
     unique_industries = list(set(list(data_industry.values.flatten())))
     n_industry = len(unique_industries)
@@ -72,11 +73,50 @@ def preprocess_design_matrix(returns, data_industry, ):
     X['alpha'] = np.ones(len(X))
 
     # get dummies
-    D = pd.get_dummies(X['sector']).astype(int)
-    D = D.iloc[:, :-1]
-    D.columns = list(industry_map.keys())[1:-1]
+    D_industry = pd.get_dummies(X['sector']).astype(int)
+    D_industry = D_industry.iloc[:, :-1]
+    D_industry.columns = list(industry_map.keys())[1:-1]
 
-    return X, D, industry_map
+
+    # get time columns
+    X['time'] = X['time'].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d'))
+    X['year'] = X['time'].apply(lambda x: x.year)
+    X['year_month'] = X['time'].apply(lambda x: f'{x.year}{x.month:02}')
+
+    X = pd.merge(X, gdp[['year_month', 'regime', 'growth']], left_on='year_month', right_on='year_month', how='left')
+    # we can forward fill since the gdp is reported on the first of the month
+    # although interpolation would be better most likely
+    X['regime'] = X['regime'].fillna(method='ffill')
+    X['growth'] = X['growth'].fillna(method='ffill')
+
+    D_crisis = pd.get_dummies(X['regime']).astype(int).iloc[:,[0,2,3]]
+
+    X = X.join(D_industry, how='left').dropna()
+    X = X.join(D_crisis, how='left').dropna()
+    return X, industry_map, list(D_industry.columns), list(D_crisis.columns)
+
+
+def get_gdp_data(path):
+
+    gdp = pd.read_csv(path)
+    # gdp.set_index('DATE', inplace=True)
+    gdp['DATE'] = gdp['DATE'].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d'))
+    gdp['year_month'] = gdp['DATE'].apply(lambda x: f'{x.year}{x.month:02}')
+    gdp['growth'] = (gdp['GDP'] - gdp['GDP'].shift(1)) / gdp['GDP'].shift(1)
+    gdp.dropna(inplace=True)
+
+    q_neg = np.quantile(gdp.growth[gdp.growth < 0], q=0.1)
+    q_pos = np.quantile(gdp.growth[gdp.growth > 0], q=0.9)
+
+    gdp['regime'] = ''
+    gdp.loc[gdp['growth'] < q_neg, 'regime'] = 'extreme_crisis'
+    gdp.loc[(gdp['growth'] > q_neg) & (gdp['growth'] < 0), 'regime'] = 'normal_crisis'
+    gdp.loc[(gdp['growth'] > 0) & (gdp['growth'] < q_pos), 'regime'] = 'normal_boom'
+    gdp.loc[gdp['growth'] > q_pos, 'regime'] = 'extreme_boom'
+
+
+    return gdp
+
 
 
 if __name__ == '__main__':
@@ -90,11 +130,9 @@ if __name__ == '__main__':
     n_horizon = 21
 
     api = Eikon(path_api_eys)
-    fm = FamaFrenchData(path_to_input_folder=fr'{path_data}\fama-french-factors', filenames=filenames)
-
     # cons = api.get_index_constituents('.SP500', date='20240915')
-
-
+    fm = FamaFrenchData(path_to_input_folder=fr'{path_data}\fama-french-factors', filenames=filenames)
+    gdp = get_gdp_data(path=fr'{path_data}\macro\fred\GDP.csv')
 
     params = {
         'rics': cons,
@@ -134,7 +172,7 @@ if __name__ == '__main__':
     # returns = returns[returns.index > '2023-01-01']
     # returns = returns.iloc[:, :100]
 
-    X, D, industry_map = preprocess_design_matrix(returns, data_industry)
+    X, industry_map, col_industry, col_regime = preprocess_design_matrix(returns, data_industry, gdp)
 
     # correlation between industries (groups)
     corr_matrix = get_corr(X)
@@ -151,7 +189,7 @@ if __name__ == '__main__':
 
     # specify and fit random effects model
     model_fe = OLS(endog=X['y'],
-                   exog=pd.concat([X[['alpha', 'MktRF', 'SMB', 'HML', 'WML']], D], axis=1),
+                   exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML'] + col_industry + col_regime],
                    hasconst=True)
 
     # changes absolutely nothing
@@ -159,6 +197,7 @@ if __name__ == '__main__':
 
     # specify and fit random effects model with heteroskedasticity-robust errors
     res_fe_robust = model_fe.fit(cov_type='cluster', cov_kwds={'groups': X['sector']})
+    # res_fe_robust = model_fe.fit(cov_type='HC3')
 
 
     # plots
@@ -174,12 +213,21 @@ if __name__ == '__main__':
     axs[0].scatter(res_re.fittedvalues, res_re.resid)
     axs[1].scatter(res_fe.fittedvalues, res_fe.resid)
     axs[2].scatter(res_fe_robust.fittedvalues, res_fe_robust.resid)
+
     plt.show()
 
     fig, axs = plt.subplots(3,1,sharex=True, sharey=True)
-    sns.displot(res_re.resid, ax=axs[0])
-    sns.displot(res_fe.resid, ax=axs[1])
-    sns.displot(res_fe_robust.resid, ax=axs[2])
+    sns.distplot(res_re.resid, ax=axs[0])
+    sns.distplot(res_fe.resid, ax=axs[1])
+    sns.distplot(res_fe_robust.resid, ax=axs[2])
     plt.show()
 
-    # assessing the model
+    # assessing the errors
+
+    # the clusters that we see in the y_hat vs e plots are due to crises
+
+    X['y_hat_fe'] = res_fe.fittedvalues
+
+    X[X['y_hat_fe'] < -0.3].groupby('year').count()
+    X[(X['y_hat_fe'] > -0.3) & (X['y_hat_fe'] < -0.2)].groupby('year').count()
+    X[(X['y_hat_fe'] > -0.2) & (X['y_hat_fe'] < -0.1)].groupby('year').count()
