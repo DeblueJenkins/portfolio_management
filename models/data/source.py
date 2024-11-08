@@ -173,10 +173,17 @@ class Eikon:
 
     def __init__(self, path_api_key: str = r'C:\Users\serge\OneDrive\Documents\apikeys.csv'):
 
-        ek_api_key = pd.read_csv(path_api_key, names=['api', 'key'], index_col=0)
-        ek.set_app_key(ek_api_key.loc['reuters'].values[0])
+        if path_api_key is not None:
 
-        self.api = ek
+            ek_api_key = pd.read_csv(path_api_key, names=['api', 'key'], index_col=0)
+            ek.set_app_key(ek_api_key.loc['reuters'].values[0])
+
+            self.api = ek
+
+        else:
+            warnings.warn('API Key not provided, initalizing empty API')
+            self.api = None
+
 
     def _parse_date_field(self, df: pd.DataFrame, date_field: str, date_field_alias: str = 'Calc Date'):
 
