@@ -10,6 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import datetime as dt
+import warnings
 
 
 
@@ -41,7 +42,7 @@ def get_corr(X, col='y'):
     res = pd.DataFrame(index=sectors, columns=sectors, data=_res)
     return res
 
-def preprocess_design_matrix(returns, data_industry, gdp):
+def preprocess_design_matrix(returns, data_industry, gdp, vix):
 
     unique_industries = list(set(list(data_industry.values.flatten())))
     n_industry = len(unique_industries)
@@ -93,7 +94,32 @@ def preprocess_design_matrix(returns, data_industry, gdp):
 
     X = X.join(D_industry, how='left').dropna()
     X = X.join(D_crisis, how='left').dropna()
+
+    X = pd.merge(X, vix[['VIX_h', 'DATE']], left_on='time', right_on='DATE', how='left')
+    warnings.warn('Losing Jan and Feb 2001 with this join since of a mismatch of dates. Can be fixed tho. ')
+
+    n_lag_1 = X.groupby('time').count().iloc[0,0]
+    X['VIX_h_l1'] = X['VIX_h'].shift(n_lag_1)
+
+    X.dropna(inplace=True)
+
     return X, industry_map, list(D_industry.columns), list(D_crisis.columns)
+
+
+def get_vix_data(path, n_horizon):
+
+    vix = pd.read_csv(path)
+    vix['DATE'] = vix['DATE'].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d'))
+    vix['year_month'] = vix['DATE'].apply(lambda x: f'{x.year}{x.month:02}')
+    vix.replace({'VIXCLS': {'.': np.nan}}, inplace=True)
+    vix['VIXCLS'] = vix['VIXCLS'].astype(float) / 100
+    vix['VIX_var_h'] = (vix['VIXCLS'] ** 2).rolling(n_horizon).sum()
+    vix['VIX_h'] = np.sqrt(vix['VIX_var_h'])
+
+
+    vix.dropna(inplace=True)
+    return vix
+
 
 
 def get_gdp_data(path):
@@ -133,6 +159,7 @@ if __name__ == '__main__':
     # cons = api.get_index_constituents('.SP500', date='20240915')
     fm = FamaFrenchData(path_to_input_folder=fr'{path_data}\fama-french-factors', filenames=filenames)
     gdp = get_gdp_data(path=fr'{path_data}\macro\fred\GDP.csv')
+    vix = get_vix_data(path=fr'{path_data}\macro\fred\VIXCLS.csv', n_horizon=n_horizon)
 
     params = {
         'rics': cons,
@@ -140,10 +167,10 @@ if __name__ == '__main__':
         'field': ['TR.PriceClose', 'Price Close'],
         'date_field': ['TR.PriceClose.calcdate', 'Calc Date'],
         'load_path': fr'{path_data}\prices',
-        # 'save_config': {'save': True, 'path': r'C:\Users\serge\IdeaProjects\portfolio_management\models\data\csv\prices' },
+        # 'save_config': {'save': True, 'path': fr'{path_data}\macro' },
         # 'params': {
         #     'SDate':'2000-12-31',
-            # 'EDate': '2024-08-29',
+        #     'EDate': '2024-08-29',
         # }
     }
 
@@ -172,7 +199,7 @@ if __name__ == '__main__':
     # returns = returns[returns.index > '2023-01-01']
     # returns = returns.iloc[:, :100]
 
-    X, industry_map, col_industry, col_regime = preprocess_design_matrix(returns, data_industry, gdp)
+    X, industry_map, col_industry, col_regime = preprocess_design_matrix(returns, data_industry, gdp, vix)
 
     # correlation between industries (groups)
     corr_matrix = get_corr(X)
@@ -180,7 +207,7 @@ if __name__ == '__main__':
     corr_matrix.columns = [{v:k for k,v in industry_map.items()}[i] for i in corr_matrix.columns]
 
     model_ols = OLS(endog=X['y'],
-                    exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML']],
+                    exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML', 'VIX_h']],
                     hasconst=True)
     res_ols = model_ols.fit()
     X['y_hat_ols'] = res_ols.fittedvalues
@@ -194,9 +221,15 @@ if __name__ == '__main__':
     sns.scatterplot(X, x='y_hat_ols', y='e_ols', hue='regime')
     plt.show()
 
+    # check correlation between VIX and y given different GDP growth (regimes)
+    sns.scatterplot(X, x='y', y='VIX_h', hue='regime')
+    plt.show()
+
+
+
     # specify and fit random effects model
     model_re = MixedLM(endog=X['y'],
-                       exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML']],
+                       exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML', 'VIX_h']],
                        groups=X['sector'])
     res_re = model_re.fit()
     # md = smf.mixedlm("y ~ MktRF + SMB + HML + WML", X,  groups=X["sector"])
@@ -204,7 +237,7 @@ if __name__ == '__main__':
 
     # specify and fit random effects model
     model_fe = OLS(endog=X['y'],
-                   exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML'] + col_industry + col_regime],
+                   exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML', 'VIX_h'] + col_industry + col_regime],
                    hasconst=True)
 
     # changes absolutely nothing
