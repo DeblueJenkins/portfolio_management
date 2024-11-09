@@ -179,6 +179,21 @@ if __name__ == '__main__':
     corr_matrix.index = [{v:k for k,v in industry_map.items()}[i] for i in corr_matrix.index]
     corr_matrix.columns = [{v:k for k,v in industry_map.items()}[i] for i in corr_matrix.columns]
 
+    model_ols = OLS(endog=X['y'],
+                    exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML']],
+                    hasconst=True)
+    res_ols = model_ols.fit()
+    X['y_hat_ols'] = res_ols.fittedvalues
+    X['e_ols'] = res_ols.resid
+
+    # check error clusters (group-based)
+    sns.scatterplot(X, x='y_hat_ols', y='e_ols', hue='sector')
+    plt.show()
+
+    # check error cluster (regime-based, i.e., time)
+    sns.scatterplot(X, x='y_hat_ols', y='e_ols', hue='regime')
+    plt.show()
+
     # specify and fit random effects model
     model_re = MixedLM(endog=X['y'],
                        exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML']],
