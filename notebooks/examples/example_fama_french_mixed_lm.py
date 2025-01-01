@@ -1,5 +1,4 @@
-from models.data.source import FamaFrenchData
-from models.data.source import Eikon
+from models.data.source import FamaFrenchData, Eikon, FRED
 import pickle
 import numpy as np
 import statsmodels.api as sm
@@ -154,12 +153,32 @@ if __name__ == '__main__':
              '5_Industry_Portfolios_Daily']
     # returns horizon, 21 would be monthly, etc.
     n_horizon = 21
+    start_date = '2000-12-31'
+    end_date = '2024-08-29'
+
 
     api = Eikon(path_api_eys)
     # cons = api.get_index_constituents('.SP500', date='20240915')
     fm = FamaFrenchData(path_to_input_folder=fr'{path_data}\fama-french-factors', filenames=filenames)
     gdp = get_gdp_data(path=fr'{path_data}\macro\fred\GDP.csv')
     vix = get_vix_data(path=fr'{path_data}\macro\fred\VIXCLS.csv', n_horizon=n_horizon)
+
+    macro_indicators = [
+        'GDP',
+        'COMREPUSQ159N',
+        'CPALTT01USM661S',
+        'MABMM301USM189S',
+        'MABMM301USM657S',
+        'RBUSBIS',
+        'LRUN64TTUSM156S',
+        'IRLTLT01USM156N',
+        'USALOLITONOSTSAM',
+    ]
+
+    fred = FRED(path=fr'{path_data}\macro\fred',
+                tickers=macro_indicators,
+                start_date=start_date,
+                end_date=end_date)
 
     params = {
         'rics': cons,
@@ -169,8 +188,8 @@ if __name__ == '__main__':
         'load_path': fr'{path_data}\prices',
         # 'save_config': {'save': True, 'path': fr'{path_data}\macro' },
         # 'params': {
-        #     'SDate':'2000-12-31',
-        #     'EDate': '2024-08-29',
+        #     'SDate': start_date,
+        #     'EDate': end_date,
         # }
     }
 
@@ -209,7 +228,8 @@ if __name__ == '__main__':
     model_ols = OLS(endog=X['y'],
                     exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML', 'VIX_h']],
                     hasconst=True)
-    res_ols = model_ols.fit()
+    res_ols = model_ols.fit(cov_type='cluster', cov_kwds={'groups': X['regime']})
+
     X['y_hat_ols'] = res_ols.fittedvalues
     X['e_ols'] = res_ols.resid
 
@@ -225,6 +245,36 @@ if __name__ == '__main__':
     sns.scatterplot(X, x='y', y='VIX_h', hue='regime')
     plt.show()
 
+    # specify and fit random effects model
+    model_fe = OLS(endog=X['y'],
+                   exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML', 'VIX_h'] + col_regime],
+                   hasconst=True)
+
+    # changes absolutely nothing
+    # res_fe = model_fe.fit()
+    res_fe = model_fe.fit(cov_type='cluster', cov_kwds={'groups': X['regime']})
+
+    X['y_hat_fe'] = res_fe.fittedvalues
+    X['e_fe'] = res_fe.resid
+
+    # specify and fit random effects model with heteroskedasticity-robust errors
+
+    # res_fe_robust = model_fe.fit(cov_type='HC3')
+
+    # check error clusters (group-based)
+    sns.scatterplot(X, x='y_hat_fe', y='e_fe', hue='sector')
+    plt.show()
+
+    # check error cluster (regime-based, i.e., time)
+    sns.scatterplot(X, x='y_hat_fe', y='e_fe', hue='regime')
+    plt.show()
+
+    # check correlation between VIX and y given different GDP growth (regimes)
+    sns.scatterplot(X, x='y', y='VIX_h', hue='regime')
+    plt.show()
+
+    sns.scatterplot(X, x='y', y='e_fe')
+    plt.show()
 
 
     # specify and fit random effects model
@@ -235,17 +285,7 @@ if __name__ == '__main__':
     # md = smf.mixedlm("y ~ MktRF + SMB + HML + WML", X,  groups=X["sector"])
     # res = md.fit()
 
-    # specify and fit random effects model
-    model_fe = OLS(endog=X['y'],
-                   exog=X[['alpha', 'MktRF', 'SMB', 'HML', 'WML', 'VIX_h'] + col_industry + col_regime],
-                   hasconst=True)
 
-    # changes absolutely nothing
-    res_fe = model_fe.fit()
-
-    # specify and fit random effects model with heteroskedasticity-robust errors
-    res_fe_robust = model_fe.fit(cov_type='cluster', cov_kwds={'groups': X['sector']})
-    # res_fe_robust = model_fe.fit(cov_type='HC3')
 
 
     # plots

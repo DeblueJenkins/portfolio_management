@@ -13,7 +13,6 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-
 def load_fed_rates_from_excel(path):
 
     def convert_dates(date):
@@ -31,14 +30,9 @@ def load_fed_rates_from_excel(path):
 
 
     return data
-
 def load_risk_free_from_ff_data(path):
 
     data = pd.read_csv(path)
-
-
-
-
 class APIError(Exception):
     """An API Error Exception"""
 
@@ -166,9 +160,6 @@ class FamaFrenchData:
             self.data = df
         else:
             raise UserWarning('Loading files has failed, self._data has not been set.')
-
-
-
 class Eikon:
 
     def __init__(self, path_api_key: str = r'C:\Users\serge\OneDrive\Documents\apikeys.csv'):
@@ -331,11 +322,6 @@ class Eikon:
         self.data_fixed = self.data_fixed.loc[rics, fields]
         if out:
             return self.data_fixed
-
-
-
-
-
 class EikonIndustryRegionClassifier(Eikon):
 
     def __init__(self, *args, **kwargs):
@@ -349,12 +335,6 @@ class EikonIndustryRegionClassifier(Eikon):
         #  'TR.CompanyMarketCap'
         for ric in rics:
             self.api.get_data(ric, fields=['TR.GICSSector'])
-
-
-
-
-
-
 # this should have AlphaVantageStock as a subclass, but CCL right now
 class AlphaVantage:
 
@@ -543,10 +523,6 @@ class AlphaVantage:
             self.MetaData, self.TimeSeries = self._get_time_series(symbol, params, interval=self.freq)
             # self.MetaData.to_csv(fr'input\{self.name}_MetaData_{self.freq.capitalize()}.csv')
             self.TimeSeries.to_csv(fr'.\input\{self.name}_TimeSeriesData_{self.freq.capitalize()}.csv')
-
-
-
-
 class YahooData:
 
     def __init__(self, name: str, symbol: str = None):
@@ -561,8 +537,6 @@ class YahooData:
     @abstractmethod
     def _load_data(self):
         pass
-
-
 class YahooStockData(YahooData):
 
     def __init__(self, *args, start_date: pd.Timestamp, end_date: pd.Timestamp):
@@ -654,5 +628,49 @@ class YahooStockData(YahooData):
         # get option chain for specific expiration
         opt = yahoo_object.option_chain('YYYY-MM-DD')
         # data available via: opt.calls, opt.puts
+class FRED:
+
+    _names_mapper = {
+
+        'GDP':              {'alias': 'GDP', 'frq': 'quarterly', 'pct': False, 'index': False},
+        'COMREPUSQ159N':    {'alias': 'real_estate_cmrc', 'frq': 'quarterly', 'pct': True},
+        'CPALTT01USM661S':  {'alias': 'cpi', 'frq': 'monthly', 'index': False},
+        'MABMM301USM189S':  {'alias': 'money_agg', 'frq': 'monthly', 'pct': False, 'index': False},
+        'MABMM301USM657S':  {'alias': 'money_agg_chg', 'frq': 'monthly', 'pct': True, 'index': False},
+        'RBUSBIS':          {'alias': 'real_eff_broad_fx', 'frq': 'monthly', 'pct': False, 'index': True},
+        'LRUN64TTUSM156S':  {'alias': 'unemployment', 'frq': 'monthly', 'pct': True, 'index': False},
+        'IRLTLT01USM156N':  {'alias': 'bond_yield_10y', 'frq': 'monthly', 'pct': True, 'index': False},
+        'USALOLITONOSTSAM': {'alias': 'crisis_indicator', 'frq': 'monthly', 'pct': False, 'index': True},
+
+    }
+
+    col_date = 'DATE'
+    def __init__(self, path, tickers, start_date, end_date):
+
+        self.path = path
+        self.data = pd.DataFrame(index=pd.date_range(start_date, end_date),
+                                 columns=tickers)
+        self.tickers = tickers
+
+    def _load(self):
+
+        self._data = {}
+        for ti in self.tickers:
+
+            _alias = FRED._names_mapper[ti]['alias']
+            _is_pct = FRED._names_mapper[ti]['pct']
+            _data = pd.read_csv(fr'{self.path}/{ti}.csv')
+            _data[FRED.col_date] = _data[FRED.col_date].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d'))
+            _data.set_index(FRED.col_date, inplace=True)
+            _data['year_month'] = _data[FRED.col_date].apply(lambda x: f'{x.year}{x.month:02}')
+            _data = _data.rename(columns={ti:_alias})
+            if not _is_pct:
+                _data[f'{_alias}_pct_change'] = (_data[ti] - _data[ti].shift(1)) / _data[ti].shift(1)
+
+            self._data[ti] = _data
+            self.data.join(_data, how='left')
+
+
+
 
 
