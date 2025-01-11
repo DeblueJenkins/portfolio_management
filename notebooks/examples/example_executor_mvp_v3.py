@@ -14,7 +14,8 @@ import datetime as dt
 
 class Executor:
 
-    def __init__(self, start_date: str, end_date: str, path_data, path_api_keys, path_config):
+    def __init__(self, start_date: str, end_date: str, path_data,
+                 path_api_keys, path_config):
 
         self.path_api_keys = path_api_keys
         self.start_date = start_date
@@ -111,10 +112,10 @@ if __name__ == '__main__':
     END_DATE = START_DATE_TEST = '2023-06-04'
     END_DATE_TEST = '2023-07-20'
 
-    PATH_DATA = fr'{Path(__file__).parents[2]}\models\data'
+    PATH_DATA = r'C:\Users\serge\OneDrive\portfolio_management\data\csv'
     PATH_API_KEYS = r'C:\Users\serge\OneDrive\reuters\apikeys.csv'
     PATH_SAVE_PLOTS = os.path.join(r'results\figures')
-
+    PATH_CONFIG = 'config_example.yaml'
 
     store_results = {}
 
@@ -124,7 +125,7 @@ if __name__ == '__main__':
 
         store_ = {}
 
-        executor = Executor(START_DATE, END_DATE, PATH_DATA, PATH_API_KEYS)
+        executor = Executor(START_DATE, END_DATE, PATH_DATA, PATH_API_KEYS, PATH_CONFIG)
 
         horizon = executor.portfolio.horizon
 
