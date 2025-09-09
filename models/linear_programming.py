@@ -73,7 +73,8 @@ class LinearFactorModel(AbstractModel):
         # we need the last PC factor in the time-series of PC factors
         # in order to match the time-dimensions of the asset returns
 
-        self.factors = np.concatenate([[1], X[0,:]])
+        # self.factors = np.concatenate([[1], X[0,:]])
+        self.factors = np.column_stack([np.ones(X.shape[0]), X])
         self.factor_loadings = self.estimator.betas.copy()
         idx = np.isin(self.estimator.assets, self.portfolio.assets)
         self.assets_estimated = self.estimator.assets[idx]
@@ -105,7 +106,8 @@ class LinearFactorModel(AbstractModel):
 
     def get_factor_mean(self, out=False):
 
-        self.factor_mean = self.factor_loadings.T.dot(self.factors)
+        self.factor_mean = self.factors.dot(self.factor_loadings)
+        # self.factor_mean = self.factor_loadings.T.dot(self.factors)
         if out:
             return self.factor_mean
 

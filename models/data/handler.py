@@ -74,7 +74,7 @@ class DataHandler:
 
 
     def get_pca_factors(self, n_components: int, data: np.ndarray = None, pca_method: str = 'ordinary',
-                        method: str = 'svd', covariance_estimate: str = 'mle'):
+                        method: str = 'svd', covariance_estimate: str = 'mle', rolling_window: int = None):
 
         if method == 'pca':
             # does PCA on correlation
@@ -91,9 +91,11 @@ class DataHandler:
             X = data
 
         if pca_method == 'ordinary':
-            self._pca_model = PcaHandler(X, method=method)
+            self._pca_model = PcaHandler(X, method=method, demean=True)
         elif pca_method == 'r2pca':
-            pass
+            if rolling_window is None:
+                raise Exception('When PCA method is r2pca a rolling window must be provided')
+            self._pca_model = R2Pca(X, rolling_window=rolling_window, demean=True)
         else:
             raise Exception('method is not implemented yet')
 

@@ -69,9 +69,11 @@ remove_from_portfolio = list(set(before_drop).difference(set(after_drop)))
 
 # n_comps should be a hyperparam
 n_comps = portfolio.config['MODEL']['main_factors']['PCA']
+
 factors, eigen_values = preprocessor.get_pca_factors(n_components=n_comps,
                                        data=returns,
-                                       method='ordinary')
+                                       method='ordinary',
+                                       rolling_window=)
 
 
 # since this takes portfolio, it can have the returns and factors in self

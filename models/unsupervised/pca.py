@@ -3,7 +3,7 @@ import numpy as np
 import warnings
 import pandas as pd
 from abc import ABC, abstractmethod
-
+from typing import Union
 
 class PcaBaseClass(ABC):
 
@@ -89,15 +89,15 @@ class PcaHandler(PcaBaseClass):
         :param demean: boolean variable True demeans the data, when false it will not
 
         """
-        if method == 'svd':
-            if X.shape[0] == X.shape[1]:
-                raise Exception('When method is svd, please provide rectangular matrix (data)')
-        elif method == 'pca':
+
+        if method == 'pca':
             if X.shape[0] != X.shape[1]:
                 raise Exception('When method is pca, please provide square matrix (covariance)')
             if np.sum(X != X.T).sum() != 0:
                 raise Exception('Covariance matrix must be symmetric')
             demean = False
+        elif method == 'svd':
+            pass
         else:
             raise Exception('Method must be either svd (on data) or pca (on covariance matrix)')
 
@@ -186,8 +186,14 @@ class R2Pca(PcaBaseClass):
         self.eigenvector_dict = {}
         self.rolling_window = rolling_window
 
+
         super().__init__(data=data, demean=demean)
 
+    def benchmark_test(self):
+        pass
+
+    def plot(self, n_components):
+        pass
     def components(self, n: int) -> np.array:
         """
         Computes principle components
@@ -199,11 +205,17 @@ class R2Pca(PcaBaseClass):
         x = self.x[:self.rolling_window, :]
         singular_values, eig_vals, eig_vecs = self.get_svd(x=x)
         v_t_pre = eig_vecs[:, :n]
+
         components = np.dot(x, v_t_pre)[-1, :].reshape((1, n))
 
         date = self.index[self.rolling_window - 1]
 
         self.eigenvector_dict[date] = v_t_pre
+        self.eig_vals = eig_vals
+        # this is set for implementation purposes, to be fixed later
+        warnings.warn('Eigenvalues are wrong.')
+
+
         i = 1
 
         while i + self.rolling_window <= self.n:
@@ -214,14 +226,7 @@ class R2Pca(PcaBaseClass):
             date = self.index[self.rolling_window + i - 1]
             self.eigenvector_dict[date] = v_t
 
-            order = []
-            for j in range(n):
-                j_max = np.argmax(abs(np.dot(v_t_pre.T, v_t[:, j])))
-                order.append(j_max)
-                if np.dot(v_t_pre[:, j], v_t[:, j_max]) < 0:
-                    v_t[:, j_max] = -v_t[:, j_max]
-
-            v_t = v_t[:, order]
+            v_t = correct_sign_flip(n, v_t_pre, v_t)
             new_components = np.dot(x, v_t)
             new_row = new_components[-1, :].reshape((1, n))
             components = np.concatenate((components, new_row))
@@ -229,3 +234,104 @@ class R2Pca(PcaBaseClass):
             i += 1
 
         return components
+
+
+def correct_sign_flip(n_pcs, v_t_prev, v_t):
+
+    order = []
+    for j in range(n_pcs):
+        j_max = np.argmax(abs(np.dot(v_t_prev.T, v_t[:, j])))
+        order.append(j_max)
+        if np.dot(v_t_prev[:, j], v_t[:, j_max]) < 0:
+            v_t[:, j_max] = -v_t[:, j_max]
+
+    return v_t[:, order]
+
+
+class RollingPcaHandler:
+
+    def __init__(self, pca_handler: Union[PcaHandler, R2Pca],
+                        data: Union[np.ndarray, pd.DataFrame],
+                        n_components: int,
+                        demean: str = True,
+                        rolling_window: int = None,
+                    ):
+
+        self.pca_handler = pca_handler
+        self.T, self.N = data.shape
+        self.rolling_window = rolling_window
+        if isinstance(data, pd.DataFrame):
+            self.index = data.index
+            data = data.to_numpy()
+        else:
+            self.index = np.arange(data)
+
+        self.data = data
+        self.demean = demean
+        self.n_components = n_components
+
+
+    def _flip_signs(self, pcs_t: np.ndarray, t: int):
+
+        _signs_ind_prev = pcs_t[t-1,:] > 0
+        _signs_ind_t = pcs_t[t, :] > 0
+        _signs_to_flip = _signs_ind_prev != _signs_ind_t
+        _signs = np.where(_signs_to_flip==1)
+
+        return _signs, -1 * pcs_t[t, _signs]
+
+
+
+
+
+
+
+
+    def estimate(self, method='ordinary'):
+
+        pcs_t = np.zeros((self.T-self.rolling_window, self.n_components))
+        for t in np.arange(0, self.T-self.rolling_window, 1):
+
+            data = self.data[:t+self.rolling_window, :]
+            index = self.index[:t+self.rolling_window]
+            print(f'Estimating PCA for {index[-1]}')
+            pca_handler = self.pca_handler(X=data, demean=self.demean, method='svd')
+            pca_handler.components(self.n_components)
+
+            if method == 'r2pca':
+                if t == 0:
+                    eig_vecs_corrected = pca_handler.eig_vecs[:, :self.n_components]
+
+                else:
+                    eig_vecs_corrected = correct_sign_flip(n_pcs=self.n_components,
+                                                           v_t_prev=v_t_prev,
+                                                           v_t=pca_handler.eig_vecs[:, :self.n_components])
+                pca_handler.eig_vecs[:, :self.n_components] = eig_vecs_corrected
+            elif method == 'ordinary':
+                pass
+
+
+            pcs = np.dot(pca_handler.x, pca_handler.eig_vecs[:, :self.n_components])
+            if index[0] < index[-1]:
+                pcs_t[t,:] = pcs[0,:]
+            else:
+                pcs_t[t,:] = pcs[-1,:]
+
+            if method == 'ordinary_scaled':
+                if t != 0:
+                    _indices, pcs_t_flipped = self._flip_signs(pcs_t, t)
+                    pcs_t[t, _indices] = pcs_t_flipped
+
+
+            v_t_prev = pca_handler.eig_vecs[:, :self.n_components]
+
+        return pd.DataFrame(index=self.index[self.rolling_window:], data=pcs_t)
+
+
+
+
+
+
+
+
+
